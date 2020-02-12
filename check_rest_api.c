@@ -1,17 +1,57 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <curl/curl.h>
 
 enum STATUS{OK, WARNING, CRITICAL, UNKNOWN};
 
+// Holds our response from cURL
+typedef struct cURLHTTPBody {
+  char* payload;
+  size_t size;
+} cURLHTTPBody;
 
+// Define our cURL handle and struct
+CURL* curl;
+struct cURLHTTPBody* body;
+
+// Cleanup
+void end(int exitCode) {
+
+  free(body->payload);
+  free(body);
+
+  exit(exitCode);
+}
+
+
+// Callback after cURL.. does its thing
 size_t write_data(void *buf, size_t size, size_t nmemb, void *userp) {
-  return size * nmemb;
+
+  //struct cURLHTTPBody* body = (struct cURLHTTPBody*) userp;
+  
+  // Size of body plus null terminator
+  body->size = nmemb + 1;
+  
+  // Expand our payload to account for the actual payload
+  body->payload = (char*) malloc(body->size);
+
+  if (body->payload == NULL) {
+
+    // Malloc failed. Signal to handler to use HTTP Status code
+    body->size = 0;
+  } else {
+
+    // Copy payload and set null terminiating byte
+    memcpy(body->payload, buf, body->size - 1);
+    body->payload[body->size] = '\0';
+  }
+
+  return nmemb;
 }
 
 void* callAPI(char* apiUrl) {
 
-  CURL *curl;
   CURLcode res;
 
   curl = curl_easy_init();
@@ -24,11 +64,11 @@ void* callAPI(char* apiUrl) {
     // This is the only place, besides main() that returns
     if (res != CURLE_OK) {
       printf("UNKNOWN - cURL call resulted in error: %s\n", curl_easy_strerror(res));
-      exit(UNKNOWN);
+      end(UNKNOWN);
     }
 
     curl_easy_cleanup(curl);
-
+    
     return curl;
   }
 
@@ -59,7 +99,7 @@ int checkParams(int argc, char* argv[]) {
 
     if (strcmp(arg, "-O") == 0 || strcmp(arg, "--expected_output") == 0) continue;
 
-    if (strcmp(arg, "-H") == 0 || strcmp(arg, "--help" == 0)) {
+    if (strcmp(arg, "-H") == 0 || strcmp(arg, "--help") == 0) {
       printf(helpMessage);
       return 0;
     }
@@ -76,6 +116,9 @@ int checkParams(int argc, char* argv[]) {
 // Program Entry Point
 int main(int argc, char** argv) {
 
+  // Initialize our body
+  body = malloc(sizeof(struct cURLHTTPBody));
+
   if (!checkParams(argc, argv)) return CRITICAL;
 
   // Returns a CURL thing that we can use to get info from the API call
@@ -86,22 +129,23 @@ int main(int argc, char** argv) {
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpResponseCode);
 
   if (httpResponseCode == 200) {
+    printf("Output: %s", body->payload);
     printf("OK - API Returned 200-OK\n");
-    exit(OK);
+    end(OK);
   }
 
   
   if (httpResponseCode < 500) {
     printf("WARNING - Unexpected HTTP response code: %d\n", httpResponseCode);
-    exit(WARNING);
+    end(WARNING);
   }
 
   if (httpResponseCode > 500) {
     printf("CRITICAL - HTTP Reponse Code > 500: %d\n", httpResponseCode);
-    exit(CRITICAL);
+    end(CRITICAL);
   }
 
   // Not sure how we would get here
   printf("UNKNOWN - Something weird happened. HTTP Reponse Code: %d\n", httpResponseCode);
-  exit(UNKNOWN);      
+  end(UNKNOWN);      
 }
