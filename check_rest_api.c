@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <json/json_tokener.h>
+#include <json/json_object.h>
 
 enum STATUS{OK, WARNING, CRITICAL, UNKNOWN};
 
@@ -11,9 +13,10 @@ typedef struct cURLHTTPBody {
   size_t size;
 } cURLHTTPBody;
 
-// Define our cURL handle and struct
+// Define our cURL handle and struct, and JSON object
 CURL* curl;
 struct cURLHTTPBody* body;
+json_object* json;
 
 // Cleanup
 void end(int exitCode) {
@@ -112,6 +115,28 @@ int checkParams(int argc, char* argv[]) {
   return 1;
 }
 
+// Parses JSON
+void parseJSON() {
+  
+  if (body->size == 0) return;
+
+  json_tokener* tok = json_tokener_new();
+  enum json_tokener_error jerr = json_tokener_continue;
+
+  while (jerr == json_tokener_continue) {
+
+    json = json_tokener_parse_ex(tok, body->payload, body->size);
+
+    jerr = json_tokener_get_error(tok);
+  }
+
+  // Not successful :(
+  if (jerr != json_tokener_success) {
+    json_tokener_free(json);
+    json = NULL;
+  }
+}
+
 
 // Program Entry Point
 int main(int argc, char** argv) {
@@ -122,14 +147,19 @@ int main(int argc, char** argv) {
   if (!checkParams(argc, argv)) return CRITICAL;
 
   // Returns a CURL thing that we can use to get info from the API call
-        CURL *curl = (CURL*) callAPI(argv[argc - 1]);
+  CURL *curl = (CURL*) callAPI(argv[argc - 1]);
+
+  parseJSON();
+
+  json_object* status = json_object_object_get_ex(json, "status");
+
+  printf("%s\n", json_object_get_string(status));
 
   // Extract the HTTP Response Code
   long httpResponseCode;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpResponseCode);
 
   if (httpResponseCode == 200) {
-    printf("Output: %s", body->payload);
     printf("OK - API Returned 200-OK\n");
     end(OK);
   }

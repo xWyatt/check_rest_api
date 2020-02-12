@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-lcurl
+CFLAGS=-lcurl -ljson-c
 DEPS=
 OBJ=check_rest_api.o 
 
