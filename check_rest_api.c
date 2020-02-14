@@ -5,6 +5,8 @@
 #include <json/json_tokener.h>
 #include <json/json_object.h>
 
+#include "check_rest_api.h"
+
 enum STATUS{OK, WARNING, CRITICAL, UNKNOWN};
 
 // Holds our response from cURL
@@ -132,8 +134,7 @@ void parseJSON() {
 
   // Not successful :(
   if (jerr != json_tokener_success) {
-    json_tokener_free(json);
-    json = NULL;
+    json_tokener_free(tok);
   }
 }
 
@@ -151,9 +152,9 @@ int main(int argc, char** argv) {
 
   parseJSON();
 
-  json_object* status = json_object_object_get_ex(json, "status");
+  //json_object* status = json_object_object_get_ex(json, "status");
 
-  printf("%s\n", json_object_get_string(status));
+  //printf("%s\n", json_object_get_string(status));
 
   // Extract the HTTP Response Code
   long httpResponseCode;
