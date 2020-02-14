@@ -167,16 +167,19 @@ int main(int argc, char** argv) {
 
   
   if (httpResponseCode < 500) {
-    printf("WARNING - Unexpected HTTP response code: %d\n", httpResponseCode);
+    printf("WARNING - Unexpected HTTP response code: %ld\n", httpResponseCode);
     end(WARNING);
   }
 
   if (httpResponseCode > 500) {
-    printf("CRITICAL - HTTP Reponse Code > 500: %d\n", httpResponseCode);
+    printf("CRITICAL - HTTP Reponse Code > 500: %ld\n", httpResponseCode);
     end(CRITICAL);
   }
 
   // Not sure how we would get here
-  printf("UNKNOWN - Something weird happened. HTTP Reponse Code: %d\n", httpResponseCode);
-  end(UNKNOWN);      
+  printf("UNKNOWN - Something weird happened. HTTP Reponse Code: %ld\n", httpResponseCode);
+  end(UNKNOWN);     
+
+  // We never get here; just satisfies -Werror=return-type
+  return 0;
 }
