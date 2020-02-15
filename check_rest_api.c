@@ -6,6 +6,7 @@
 #include <json/json_object.h>
 
 #include "check_rest_api.h"
+#include "read_input.h"
 
 enum STATUS{OK, WARNING, CRITICAL, UNKNOWN};
 
@@ -80,43 +81,6 @@ void* callAPI(char* apiUrl) {
   return 0;
 }
 
-// Check passed parameters. Only verifies the correct switches exist
-int checkParams(int argc, char* argv[]) {
-
-  char helpMessage[] = "Usage: check_rest_api [OPTIONS..] <api_url>\n\nOptions:\n \
-  -V, --http_verb   HTTP Verb (GET/POST/PUT/DELETE, etc.) \n \
-  -O, --expected_output The output to compare to \n \
-  \nReport Bugs to: teeterwyatt@gmail.com\n";
-
-  if (argc % 2 > 0) {
-    printf("<api_url> required!\n\n");
-    printf(helpMessage);
-    return 0;
-  }
-
-  // Verify all 
-  int i;
-  for (i = 1; i < argc - 1; i += 2) {
-
-    char* arg = (char*) argv[i];
-
-    if (strcmp(arg, "-V") == 0 || strcmp(arg, "--http_verb") == 0) continue;
-
-    if (strcmp(arg, "-O") == 0 || strcmp(arg, "--expected_output") == 0) continue;
-
-    if (strcmp(arg, "-H") == 0 || strcmp(arg, "--help") == 0) {
-      printf(helpMessage);
-      return 0;
-    }
-
-    printf("Bad argument: %s\n\n", arg);
-    printf(helpMessage);
-    return 0;
-  }
-  
-  return 1;
-}
-
 // Parses JSON
 void parseJSON() {
   
@@ -138,14 +102,13 @@ void parseJSON() {
   }
 }
 
-
 // Program Entry Point
 int main(int argc, char** argv) {
 
   // Initialize our body
   body = malloc(sizeof(struct cURLHTTPBody));
 
-  if (!checkParams(argc, argv)) return CRITICAL;
+  if (!validateArguments(argc, argv)) return CRITICAL;
 
   // Returns a CURL thing that we can use to get info from the API call
   CURL *curl = (CURL*) callAPI(argv[argc - 1]);
