@@ -8,14 +8,6 @@
 #include "check_rest_api.h"
 #include "read_input.h"
 
-enum STATUS{OK, WARNING, CRITICAL, UNKNOWN};
-
-// Holds our response from cURL
-typedef struct cURLHTTPBody {
-  char* payload;
-  size_t size;
-} cURLHTTPBody;
-
 // Define our cURL handle and struct, and JSON object
 CURL* curl;
 struct cURLHTTPBody* body;
@@ -26,6 +18,23 @@ void end(int exitCode) {
 
   free(body->payload);
   free(body);
+
+  free(argVals->hostname);
+  free(argVals->port);
+  free(argVals->protocol);
+  
+  int i;
+  for (i = 0; i < argVals->numberOfKeys; i++) {
+    free(argVals->keys[i]);
+  }
+
+  free(argVals->keys);
+  free(argVals->warningMin);
+  free(argVals->warningMax);
+  free(argVals->warningInclusive);
+  free(argVals->criticalMin);
+  free(argVals->criticalMax);
+  free(argVals->criticalInclusive);
 
   exit(exitCode);
 }
@@ -107,8 +116,9 @@ int main(int argc, char** argv) {
 
   // Initialize our body
   body = malloc(sizeof(struct cURLHTTPBody));
+  body->payload = NULL;
 
-  if (!validateArguments(argc, argv)) return CRITICAL;
+  if (!validateArguments(argc, argv)) end(UNKNOWN);
 
   // Returns a CURL thing that we can use to get info from the API call
   CURL *curl = (CURL*) callAPI(argv[argc - 1]);
