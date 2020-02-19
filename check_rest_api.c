@@ -16,6 +16,8 @@ json_object* json;
 // Cleanup
 void end(int exitCode) {
 
+  curl_easy_cleanup(curl);
+
   free(body->payload);
   free(body);
 
@@ -49,7 +51,7 @@ size_t write_data(void *buf, size_t size, size_t nmemb, void *userp) {
   body->size = nmemb + 1;
   
   // Expand our payload to account for the actual payload
-  body->payload = (char*) malloc(body->size);
+  body->payload = (char*) malloc(body->size + 1);
 
   if (body->payload == NULL) {
 
@@ -65,14 +67,28 @@ size_t write_data(void *buf, size_t size, size_t nmemb, void *userp) {
   return nmemb;
 }
 
-void* callAPI(char* apiUrl) {
+void* callAPI(void) {
 
   CURLcode res;
 
   curl = curl_easy_init();
   if (curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, apiUrl);
+    curl_easy_setopt(curl, CURLOPT_URL, argVals->hostname);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);    
+
+    // Set Protocol. If not set, cURL allows all protocols
+    if (argVals->protocol != NULL) {
+      if (strcmp(argVals->protocol, "HTTP") == 0) {
+        curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP);
+      } else if (strcmp(argVals->protocol, "HTTPS") == 0) {
+        curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+      }
+    }
+
+    // Set port. If not set, cURL uses default for the protocol
+    if (argVals->port != NULL) {
+      curl_easy_setopt(curl, CURLOPT_PORT, atol(argVals->port));
+    }
 
     res = curl_easy_perform(curl);
 
@@ -82,8 +98,6 @@ void* callAPI(char* apiUrl) {
       end(UNKNOWN);
     }
 
-    curl_easy_cleanup(curl);
-    
     return curl;
   }
 
@@ -121,7 +135,7 @@ int main(int argc, char** argv) {
   if (!validateArguments(argc, argv)) end(UNKNOWN);
 
   // Returns a CURL thing that we can use to get info from the API call
-  CURL *curl = (CURL*) callAPI(argv[argc - 1]);
+  callAPI();
 
   parseJSON();
 

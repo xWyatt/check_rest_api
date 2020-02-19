@@ -11,7 +11,7 @@ typedef struct cURLHTTPBody {
 
 void end(int exitCode);
 size_t write_data(void* buffer, size_t size, size_t nmemb, void* userPointer);
-void* callAPI(char* apiURL);
+void* callAPI(void);
 void parseJSON();
 
 #endif 

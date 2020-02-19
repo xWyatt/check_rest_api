@@ -275,7 +275,7 @@ int validateArguments(int argc, char** argv) {
       }
 
       // Save hostname
-      argVals->hostname = (char*) malloc(sizeof(nextArg));
+      argVals->hostname = (char*) malloc(strlen(nextArg) * sizeof(char) + 1);
       if (argVals->hostname == NULL) return 0;
 
       strcpy(argVals->hostname, nextArg);    
