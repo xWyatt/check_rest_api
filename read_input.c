@@ -245,7 +245,7 @@ int validateArguments(int argc, char** argv) {
 
   // Verify all arguments passed
   int i;
-  for (i = 1; i < argc - 1; i += 2) {
+  for (i = 1; i < argc; i += 2) {
 
     char* arg = (char*) argv[i];
     char* nextArg = (char*) argv[i + 1];
