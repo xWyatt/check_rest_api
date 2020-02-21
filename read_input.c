@@ -168,9 +168,9 @@ int parseWarningOrCriticalValues(char* value, char type) {
         argVals->warningMax = malloc(sizeof(double));
         argVals->warningInclusive = malloc(sizeof(int));
       } else {
-        argVals->warningMin = realloc(argVals->warningMin, sizeof(double) * numberOfTokens + 1);
-        argVals->warningMax = realloc(argVals->warningMax, sizeof(double) * numberOfTokens + 1);
-        argVals->warningInclusive = realloc(argVals->warningInclusive, sizeof(int) * numberOfTokens + 1);
+        argVals->warningMin = realloc(argVals->warningMin, sizeof(double) * (numberOfTokens + 1));
+        argVals->warningMax = realloc(argVals->warningMax, sizeof(double) * (numberOfTokens + 1));
+        argVals->warningInclusive = realloc(argVals->warningInclusive, sizeof(int) * (numberOfTokens + 1));
       }
 
       if (argVals->warningMin == NULL || argVals->warningMax == NULL || argVals->warningInclusive == NULL) {
@@ -188,9 +188,9 @@ int parseWarningOrCriticalValues(char* value, char type) {
         argVals->criticalMax = malloc(sizeof(double));
         argVals->criticalInclusive = malloc(sizeof(int));
       } else {
-        argVals->criticalMin = realloc(argVals->criticalMin, sizeof(double) * numberOfTokens + 1);
-        argVals->criticalMax = realloc(argVals->criticalMax, sizeof(double) * numberOfTokens + 1);
-        argVals->criticalInclusive = realloc(argVals->criticalInclusive, sizeof(int) * numberOfTokens + 1);
+        argVals->criticalMin = realloc(argVals->criticalMin, sizeof(double) * (numberOfTokens + 1));
+        argVals->criticalMax = realloc(argVals->criticalMax, sizeof(double) * (numberOfTokens + 1));
+        argVals->criticalInclusive = realloc(argVals->criticalInclusive, sizeof(int) * (numberOfTokens + 1));
       }
 
       if (argVals->criticalMin == NULL || argVals->criticalMax == NULL || argVals->criticalInclusive == NULL) {
@@ -284,6 +284,7 @@ int validateArguments(int argc, char** argv) {
     }
 
     if (strcmp(arg, "-P") == 0 || strcmp(arg, "--port") == 0) {
+      // TODO better error checking
       if (!isdigit(nextArg)) {
         printf("Invalid value for -P, --port. Must be a valid port number\n\n%s", helpMessage);
         return 0;

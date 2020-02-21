@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 #include <json/json_tokener.h>
 #include <json/json_object.h>
+#include <json/json_util.h>
 
 #include "check_rest_api.h"
 #include "read_input.h"
@@ -45,8 +46,12 @@ void end(int exitCode) {
 // Callback after cURL.. does its thing
 size_t write_data(void *buf, size_t size, size_t nmemb, void *userp) {
 
-  //struct cURLHTTPBody* body = (struct cURLHTTPBody*) userp;
-  
+  if (nmemb == 1) {
+    body->size = 0;
+    body->payload = NULL;
+    return nmemb;
+  }  
+
   // Size of body plus null terminator
   body->size = nmemb + 1;
   
@@ -61,7 +66,7 @@ size_t write_data(void *buf, size_t size, size_t nmemb, void *userp) {
 
     // Copy payload and set null terminiating byte
     memcpy(body->payload, buf, body->size - 1);
-    body->payload[body->size] = '\0';
+    body->payload[nmemb] = '\0';
   }
 
   return nmemb;
@@ -125,25 +130,9 @@ void parseJSON() {
   }
 }
 
-// Program Entry Point
-int main(int argc, char** argv) {
+// Checks HTTP status codes. Program can/will exit from here
+void checkHTTPStatusCode(void) {
 
-  // Initialize our body
-  body = malloc(sizeof(struct cURLHTTPBody));
-  body->payload = NULL;
-
-  if (!validateArguments(argc, argv)) end(UNKNOWN);
-
-  // Returns a CURL thing that we can use to get info from the API call
-  callAPI();
-
-  parseJSON();
-
-  //json_object* status = json_object_object_get_ex(json, "status");
-
-  //printf("%s\n", json_object_get_string(status));
-
-  // Extract the HTTP Response Code
   long httpResponseCode;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpResponseCode);
 
@@ -162,9 +151,218 @@ int main(int argc, char** argv) {
     printf("CRITICAL - HTTP Reponse Code > 500: %ld\n", httpResponseCode);
     end(CRITICAL);
   }
+}
+
+// Checks HTTP body against -K parameters, and -w/-c
+// Program can/will exit from here
+void checkHTTPBody(void) {
+
+  // Is there more elegant methods of sorting out OK/WARN/CRIT/UNKNOWN messages so
+  // they output in order? Yeah. There are.
+  int severityLevel = OK;
+  char** OKmessages;
+  char** WARNINGmessages;
+  char** CRITICALmessages;
+  char** UNKNOWNmessages;
+  OKmessages = malloc(argVals->numberOfKeys * sizeof(OKmessages));
+  WARNINGmessages = malloc(argVals->numberOfKeys * sizeof(WARNINGmessages));
+  CRITICALmessages = malloc(argVals->numberOfKeys * sizeof(CRITICALmessages));
+  UNKNOWNmessages = malloc(argVals->numberOfKeys * sizeof(UNKNOWNmessages));
+
+  int i;
+
+  // Allocate blank values for our messages  
+  for (i = 0; i < argVals->numberOfKeys; i++) { 
+    OKmessages[i] = malloc(1);
+    WARNINGmessages[i] = malloc(1);
+    CRITICALmessages[i] = malloc(1);
+    UNKNOWNmessages[i] = malloc(1);
+
+    OKmessages[i][0] = '\0'; 
+    WARNINGmessages[i] = '\0'; 
+    CRITICALmessages[i][0] = '\0'; 
+    UNKNOWNmessages[i][0] = '\0'; 
+  }
+
+  // Check each key for 'validity'
+  for (i = 0; i < argVals -> numberOfKeys; i++) {
+    char* jsonKey = argVals->keys[i];
+
+    // Get the value
+    json_object* object;
+    if (json_object_object_get_ex(json, jsonKey, &object)) {
+      json_type type  = json_object_get_type(object);
+    
+      // Require type to be a number before checking
+      if (type != json_type_int && type != json_type_double) {
+
+        char msg[] = "UNKNOWN - JSON type of '%s' is '%s'. Needs to be a double or int.\n";
+        int len = snprintf(NULL, 0, msg, jsonKey, json_type_to_name(type));
+        UNKNOWNmessages[i] = realloc(UNKNOWNmessages[i], len + 1);
+        sprintf(UNKNOWNmessages[i], msg, jsonKey, json_type_to_name(type));
+
+        severityLevel = UNKNOWN;
+      } else {
+
+        double value = json_object_get_double(object);
+      
+        // Check Critical, if applicable
+        if (argVals->criticalMin != NULL) {
+        
+          int min, max, inclusive;
+          min = argVals->criticalMin[i];
+          max = argVals->criticalMax[i];
+          inclusive = argVals->criticalInclusive[i];
+        
+          if (inclusive) {
+
+            if (value <= min || value >= max) {
+
+              char msg[] = "CRITICAL - '%s' is %g\n";
+              int len = snprintf(NULL, 0, msg, jsonKey, value);
+              CRITICALmessages[i] = realloc(CRITICALmessages[i], len + 1);
+              sprintf(CRITICALmessages[i], msg, jsonKey, value);
+
+              if (severityLevel < WARNING) severityLevel = WARNING;
+            } else {
+
+              char msg[] = "OK - '%s' is %g\n";
+              int len = snprintf(NULL, 0, msg, jsonKey, value);
+              OKmessages[i] = realloc(OKmessages[i], len + 1);      
+              sprintf(OKmessages[i], msg, jsonKey, value);
+            }
+
+          } else {
+
+            if (value < min || value > max) {
+              
+              char msg[] = "CRITICAL - '%s' is %g\n";
+              int len = snprintf(NULL, 0, msg, jsonKey, value);
+              CRITICALmessages[i] = realloc(CRITICALmessages[i], len + 1);
+              sprintf(CRITICALmessages[i], msg, jsonKey, value);
+
+              if (severityLevel < WARNING) severityLevel = WARNING;
+            } else {           
+
+              char msg[] = "OK - '%s' is %g\n";
+              int len = snprintf(NULL, 0, msg, jsonKey, value);
+              OKmessages[i] = realloc(OKmessages[i], len + 1);      
+              sprintf(OKmessages[i], msg, jsonKey, value);
+            }
+          }
+        }
+
+        // Check Warning, if applicable (We set WARNING, and CRITICAL isn't set)
+        if (argVals->warningMin != NULL && (CRITICALmessages[i]) == 0) {
+        
+          int min, max, inclusive;
+          min = argVals->warningMin[i];
+          max = argVals->warningMax[i];
+          inclusive = argVals->warningInclusive[i];
+        
+          if (inclusive) {
+
+            if (value <= min || value >= max) {
+
+              char msg[] = "WARNING - '%s' is %g\n";
+              int len = snprintf(NULL, 0, msg, jsonKey, value);
+              WARNINGmessages[i] = realloc(WARNINGmessages[i], len + 1);
+              sprintf(WARNINGmessages[i], msg, jsonKey, value);
+
+              if (severityLevel < WARNING) severityLevel = WARNING;
+            } else {
+
+              // Only write if we haven't already written OK
+              if (strlen(OKmessages[i]) == 0) {
+                char msg[] = "OK - '%s' is %g\n";
+                int len = snprintf(NULL, 0, msg, jsonKey, value);
+                OKmessages[i] = realloc(OKmessages[i], len + 1);
+                sprintf(OKmessages[i], msg, jsonKey, value);
+              }
+            }
+
+          } else {
+
+            if (value < min || value > max) {
+      
+              char msg[] = "WARNING - '%s' is %g\n";
+              int len = snprintf(NULL, 0, msg, jsonKey, value);
+              WARNINGmessages[i] = realloc(WARNINGmessages[i], len + 1);
+              sprintf(WARNINGmessages[i], msg, jsonKey, value);
+
+              if (severityLevel < WARNING) severityLevel = WARNING;
+            } else {
+
+              // Only write if we haven't already written OK
+              if (strlen(OKmessages[i]) == 0) {
+                char msg[] = "OK - '%s' is %g\n";
+                int len = snprintf(NULL, 0, msg, jsonKey, value);
+                OKmessages[i] = realloc(OKmessages[i], len + 1);
+                sprintf(OKmessages[i], msg, jsonKey, value);
+              }
+            }
+          }
+        }
+      }
+    } else { // Object not found
+      sprintf(UNKNOWNmessages[i], "UNKNOWN - JSON key '%s' not found!\n", jsonKey);
+      severityLevel = UNKNOWN;
+    }
+  }
+
+  // Print everything in order of UNKNOWN, then CRITICAL, WARNING, and finally OK
+  for (i = 0; i < argVals->numberOfKeys; i++) {
+    printf(UNKNOWNmessages[i]);
+  }
+  for (i = 0; i < argVals->numberOfKeys; i++) {
+    printf(CRITICALmessages[i]);
+  }
+  for (i = 0; i < argVals->numberOfKeys; i++) {
+    printf(WARNINGmessages[i]); 
+  }
+  for (i = 0; i < argVals->numberOfKeys; i++) {
+    printf(OKmessages[i]);
+    
+    free(UNKNOWNmessages[i]);
+    free(CRITICALmessages[i]);
+    free(WARNINGmessages[i]);
+    free(OKmessages[i]);
+  }
+
+  free(UNKNOWNmessages);
+  free(CRITICALmessages);
+  free(WARNINGmessages);
+  free(OKmessages);
+
+  exit(severityLevel);
+}
+
+// Program Entry Point
+int main(int argc, char** argv) {
+
+  // Initialize our body
+  body = malloc(sizeof(struct cURLHTTPBody));
+  body->payload = NULL;
+
+  if (!validateArguments(argc, argv)) end(UNKNOWN);
+
+  // Call the API and get data back
+  callAPI();
+
+  // If we didn't get back a body, fallback to HTTP status codes
+  if (body->payload == NULL) {
+    checkHTTPStatusCode();
+  } else {
+    parseJSON();
+    checkHTTPBody();
+  }
+
+  //json_object* status = json_object_object_get_ex(json, "status");
+
+  //printf("%s\n", json_object_get_string(status));
 
   // Not sure how we would get here
-  printf("UNKNOWN - Something weird happened. HTTP Reponse Code: %ld\n", httpResponseCode);
+  printf("UNKNOWN - Something weird happened.\n");
   end(UNKNOWN);     
 
   // We never get here; just satisfies -Werror=return-type
