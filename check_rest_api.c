@@ -350,7 +350,7 @@ int main(int argc, char** argv) {
   callAPI();
 
   // If we didn't get back a body, fallback to HTTP status codes
-  if (body->payload == NULL) {
+  if (body->payload == NULL || argVals->numberOfKeys == 0) {
     checkHTTPStatusCode();
   } else {
     parseJSON();
