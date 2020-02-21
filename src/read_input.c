@@ -4,10 +4,10 @@
 #include <ctype.h>
 #include <math.h>
 
-#include "read_input.h"
-#include "check_rest_api.h"
+#include "headers/read_input.h"
+#include "headers/check_rest_api.h"
 
-// XXX: Update Help message
+// Help Message
 char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
   -h, --help\n\
     Print detailed help screen\n\
@@ -15,18 +15,16 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
     Print Version information\n\
   -H, --hostname=HOSTNAME\n\
     The hostname, or IP address of the API you want to check\n\
-  -P, --port=PORT\n\
-    Optional; the port for the API you want to check. Defaults to port 80\n\
-  -p, --protocol=PROTOCOL\n\
-    Optional; the protocol for the API you want to check. Possible values are 'HTTP' or 'HTTPS'\n\
   -K, --key=jsonKey\n\
-    Optional; the name of the JSON key you want to check. The value of this key must be a number\n\
+    Optional; a comma delimited list of JSON keys to check. The value of this key must be a number\n\
      If not provided, check_rest_api will check the HTTP status code. Anything < 400 will return OK,\n\
      Anthing >=400 and < 500 will return WARNING, and >= 500 will return CRITICAL.\n\
-   -w, --warning=warningThreshold\n\
-    Optional, returns WARNING if --key is outside the range of this. Disabled by default\n\
+  -w, --warning=warningThreshold\n\
+    Optional; a comma delimited list of WARNING thresholds that map to the corresponding -K, --key (JSON key)\n\
+      Returns WARNING if the corresponding --key is outside the defined -w range\n\
   -c, --critical=criticalThreshold\n\
-    Optional, returns CRITICAL if --key is outsid ethe range of this. Disabled by default\n\
+    Optiona; a comma delimited list of CRITICAL thresholds that map to the corresponding -K, --key (JSON key)\n\
+      Returns CRITICAL if the corresponding --key is outisde the defined -c range\n\
   -t, --timeout=timeoutValue\n\
     Optional, seconds before connection times out (default: 10 seconds)\n\
   \nReport Bugs to: teeterwyatt@gmail.com\n";
@@ -225,8 +223,6 @@ int validateArguments(int argc, char** argv) {
   // argVals defined in header
   argVals = malloc(sizeof(struct argValues));
   argVals->hostname = NULL;
-  argVals->port = NULL;
-  argVals->protocol = NULL;
   argVals->keys = NULL;
   argVals->numberOfKeys = 0;
   argVals->warningMax = NULL;
@@ -256,25 +252,26 @@ int validateArguments(int argc, char** argv) {
       if (arg[j] == '=') arg[j] = ' ';
     }
 
+    // Help Message
     if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0) {
       printf(version);
       printf(helpMessage);
       return 0;
     }
 
+    // Version
     if (strcmp(arg, "-V") == 0 || strcmp(arg, "--version") == 0){
       printf(version);
       return 0;
     };
    
-    // Help message
+    // Hostname
     if (strcmp(arg, "-H") == 0 || strcmp(arg, "--hostname") == 0) {
       if (nextArg[0] == '-') {
         printf("Invalid value for -H, --hostname. Must be an IP address or URL\n\n%s", helpMessage);
         return 0;
       }
 
-      // Save hostname
       argVals->hostname = (char*) malloc(strlen(nextArg) * sizeof(char) + 1);
       if (argVals->hostname == NULL) return 0;
 
@@ -283,42 +280,7 @@ int validateArguments(int argc, char** argv) {
       continue;
     }
 
-    if (strcmp(arg, "-P") == 0 || strcmp(arg, "--port") == 0) {
-      // TODO better error checking
-      if (!isdigit(nextArg)) {
-        printf("Invalid value for -P, --port. Must be a valid port number\n\n%s", helpMessage);
-        return 0;
-      }
-
-      // Save port
-      argVals->port = malloc(sizeof(nextArg));
-      if (argVals->hostname == NULL) return 0;
-
-      strcpy(argVals->port, nextArg);
-
-      continue;
-    }
-
-    if (strcmp(arg, "-p") == 0 || strcmp(arg, "--protocol") == 0) {
-
-      // Turn port uppercase for comparison
-      int j;
-      for (j = 0; j < strlen(nextArg); j++) nextArg[j] = toupper(nextArg[j]);
-
-      if (strcmp(nextArg, "HTTP") != 0 && strcmp(nextArg, "HTTPS") != 0) {
-        printf("%s not a valid protocol. Only HTTP and HTTPS are allowed!\n", nextArg);
-        return 0;
-      }
-
-      // Save protocol
-      argVals->protocol = malloc(sizeof(nextArg));
-      if (argVals->protocol == NULL) return 0;
-
-      strcpy(argVals->protocol, nextArg);
-
-      continue;
-    }
-
+    // JSON Key
     if (strcmp(arg, "-K") == 0 || strcmp(arg, "--key") == 0) {
       
       if (nextArg[0] == '-') {
@@ -365,6 +327,7 @@ int validateArguments(int argc, char** argv) {
       continue;
     }
 
+    // Warning threshold
     if (strcmp(arg, "-w") == 0 || strcmp(arg, "--warning") == 0) {
 
       if (nextArg[0] == '-') {
@@ -379,6 +342,7 @@ int validateArguments(int argc, char** argv) {
       continue;
     }
 
+    // Critical threshold
     if (strcmp(arg, "-c") == 0 || strcmp(arg, "--critical") == 0) {
       
       if (nextArg[0] == '-') {
@@ -393,6 +357,7 @@ int validateArguments(int argc, char** argv) {
       continue;
     }
 
+    // Timeout
     if (strcmp(arg, "-t") == 0 || strcmp(arg, "--timeout") == 0) {
 
       argVals->timeout = 0;
@@ -411,7 +376,8 @@ int validateArguments(int argc, char** argv) {
       continue;
     }
 
-    printf("Bad argument: %s\n\n", arg);
+    // Bad argument
+    printf("Bad argument: %s\n\n%s", arg, helpMessage);
     printf(helpMessage);
     return 0;
   }

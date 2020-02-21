@@ -6,8 +6,8 @@
 #include <json/json_object.h>
 #include <json/json_util.h>
 
-#include "check_rest_api.h"
-#include "read_input.h"
+#include "headers/check_rest_api.h"
+#include "headers/read_input.h"
 
 // Define our cURL handle and struct, and JSON object
 CURL* curl;
@@ -23,8 +23,6 @@ void end(int exitCode) {
   free(body);
 
   free(argVals->hostname);
-  free(argVals->port);
-  free(argVals->protocol);
   
   int i;
   for (i = 0; i < argVals->numberOfKeys; i++) {
@@ -80,20 +78,6 @@ void* callAPI(void) {
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, argVals->hostname);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);    
-
-    // Set Protocol. If not set, cURL allows all protocols
-    if (argVals->protocol != NULL) {
-      if (strcmp(argVals->protocol, "HTTP") == 0) {
-        curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTP);
-      } else if (strcmp(argVals->protocol, "HTTPS") == 0) {
-        curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-      }
-    }
-
-    // Set port. If not set, cURL uses default for the protocol
-    if (argVals->port != NULL) {
-      curl_easy_setopt(curl, CURLOPT_PORT, atol(argVals->port));
-    }
 
     res = curl_easy_perform(curl);
 

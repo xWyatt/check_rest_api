@@ -3,8 +3,6 @@
 
 typedef struct argValues {
   char* hostname;
-  char* port;
-  char* protocol;
   char** keys;
   int numberOfKeys;
   double* warningMax;
