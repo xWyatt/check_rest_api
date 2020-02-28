@@ -312,7 +312,7 @@ int validateArguments(int argc, char** argv) {
           }
         }
 
-        argVals->keys[argVals->numberOfKeys] = malloc(sizeof(token) * sizeof(char));
+        argVals->keys[argVals->numberOfKeys] = malloc((strlen(token) + 1) * sizeof(char));
         if (argVals->keys[argVals->numberOfKeys] == NULL) {
            printf("Error allocating space for argVals->keys!\n");
          return 0;
