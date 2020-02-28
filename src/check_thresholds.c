@@ -140,7 +140,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
         }
 
         // Check Warning, if applicable (We set WARNING, and CRITICAL isn't set)
-        if (arguments->warningMin != NULL && (CRITICALmessages[i]) == 0) {
+        if (arguments->warningMin != NULL && strlen(CRITICALmessages[i]) == 0) {
         
           int min, max, inclusive;
           min = arguments->warningMin[i];
@@ -155,6 +155,9 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
               int len = snprintf(NULL, 0, msg, jsonKey, value);
               WARNINGmessages[i] = realloc(WARNINGmessages[i], len + 1);
               sprintf(WARNINGmessages[i], msg, jsonKey, value);
+
+              // Wipe out OK message from critical
+              OKmessages[i][0] = '\0';
 
               if (severityLevel < WARNING) severityLevel = WARNING;
             } else {
@@ -176,6 +179,9 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
               int len = snprintf(NULL, 0, msg, jsonKey, value);
               WARNINGmessages[i] = realloc(WARNINGmessages[i], len + 1);
               sprintf(WARNINGmessages[i], msg, jsonKey, value);
+
+              // Wipe out OK message from critical
+              OKmessages[i][0] = '\0';
 
               if (severityLevel < WARNING) severityLevel = WARNING;
             } else {
