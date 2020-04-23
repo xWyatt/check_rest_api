@@ -23,7 +23,9 @@ void end(int exitCode) {
   free(body);
 
   free(argVals->hostname);
-  
+  free(argVals->username);
+  free(argVals->password);  
+
   int i;
   for (i = 0; i < argVals->numberOfKeys; i++) {
     free(argVals->keys[i]);
@@ -78,6 +80,12 @@ void* callAPI(void) {
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, argVals->hostname);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);    
+
+    if (argVals->username != NULL) {
+      curl_easy_setopt(curl, CURLOPT_USERNAME, argVals->username);
+      curl_easy_setopt(curl, CURLOPT_PASSWORD, argVals->password);
+      curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+    }
 
     res = curl_easy_perform(curl);
 

@@ -13,6 +13,8 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
     Print detailed help screen\n\
   -V, --version\n\
     Print Version information\n\
+  -b, --auth-basic=<username>:<password>\n\
+    Uses HTTP Basic authentication\n\
   -H, --hostname=HOSTNAME\n\
     The hostname, or IP address of the API you want to check\n\
   -K, --key=jsonKey\n\
@@ -29,7 +31,7 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
     Optional, seconds before connection times out (default: 10 seconds)\n\
   \nReport Bugs to: teeterwyatt@gmail.com\n";
 
-char version[] = "check_rest_api version: 0.0.2\n";
+char version[] = "check_rest_api version: 0.0.3\n";
 
 // I'm thinking this needs externalized
 // This function is dedicated to parsing out [@]start:end from -w and -c
@@ -223,6 +225,8 @@ int validateArguments(int argc, char** argv) {
   // argVals defined in header
   argVals = malloc(sizeof(struct argValues));
   argVals->hostname = NULL;
+  argVals->username = NULL;
+  argVals->password = NULL;
   argVals->keys = NULL;
   argVals->numberOfKeys = 0;
   argVals->warningMax = NULL;
@@ -264,6 +268,34 @@ int validateArguments(int argc, char** argv) {
       printf(version);
       return 0;
     };
+
+    // Basic Auth
+    if (strcmp(arg, "-b") == 0 || strcmp(arg, "--auth-basic") == 0) {
+      if (nextArg[0] == '-') {
+        printf("Invalid value for -b, --auth-basic. Must be a string of <username>:<password>\n\n%s", helpMessage);
+        return 0;
+      }
+
+      char* password = strpbrk(nextArg, ":");
+
+      if (password == NULL) {
+        printf("Invalid value for -b, --auth-basic. Must be a string of <username>:<password>. The ':' is literal.\n\n%s", helpMessage);
+        return 0;
+      }
+
+      // password[0] is the ':' of <username>:<password>. ':' designates the end of the username
+      password[0] = '\0';
+      password = password + 1; // Skip over the ':'
+  
+      argVals->username = (char *) malloc(strlen(nextArg) * sizeof(char) + 1);
+      argVals->password = (char *) malloc(strlen(password) * sizeof(char) + 1);
+      if (argVals->username == NULL || argVals->password == NULL) return 0;
+
+      strcpy(argVals->username, nextArg);
+      strcpy(argVals->password, password);
+   
+      continue;
+    }
    
     // Hostname
     if (strcmp(arg, "-H") == 0 || strcmp(arg, "--hostname") == 0) {
