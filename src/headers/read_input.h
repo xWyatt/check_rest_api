@@ -13,7 +13,7 @@ typedef struct argValues {
   double* criticalMax;
   double* criticalMin;
   int* criticalInclusive;
-  int timeout;
+  long timeout;
 } argValues;
 
 struct argValues* argVals;

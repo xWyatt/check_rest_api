@@ -81,6 +81,8 @@ void* callAPI(void) {
     curl_easy_setopt(curl, CURLOPT_URL, argVals->hostname);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);    
 
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, argVals->timeout);
+
     if (argVals->username != NULL) {
       curl_easy_setopt(curl, CURLOPT_USERNAME, argVals->username);
       curl_easy_setopt(curl, CURLOPT_PASSWORD, argVals->password);

@@ -235,7 +235,7 @@ int validateArguments(int argc, char** argv) {
   argVals->criticalMin = NULL;
   argVals->criticalMax = NULL;
   argVals->criticalInclusive = NULL;
-  argVals->timeout = 10;
+  argVals->timeout = 10L;
 
   // Require arguments
   if (argc == 1) {
