@@ -78,8 +78,8 @@ int parseWarningOrCriticalValues(char* value, char type) {
 
     // Parse out the user input
     // Grammar is [@][<min>:]<max>
-    //  <min> => 0,1,2,3,4,5,6,7,8,9,~
-    //  <max> => 0,1,2,3,4,5,6,7,8,9
+    //  <min> => 0,1,2,3,4,5,6,7,8,9,~,.
+    //  <max> => 0,1,2,3,4,5,6,7,8,9,.
     //  '<min>:' can be excluded- <min> is assumed 0 in that case
     //
     double min = 0, max = 0;
@@ -111,32 +111,60 @@ int parseWarningOrCriticalValues(char* value, char type) {
 
         // Build digit
         else {
-          int j;
+          int j, inDecimal = 0;
           for (j = inclusive ? 1 : 0; j < strlen(innerToken); j++) {
-            if (!isdigit(innerToken[j])) {
+            if (!isdigit(innerToken[j]) && (inDecimal && innerToken[j] == '.')) {
               printf("Invalid token '%c' in value '%s' for %s\n\n%s", innerToken[j], token, switchType, helpMessage);
               return 0;
             }
-              
-            // Build the double from char
-            min = (min * 10) + (innerToken[j] - '0');
+ 
+	    if (innerToken[j] == '.') {
+              inDecimal = 1;
+	    } else {
+	      // Build int from consecutive chars                        
+              min = (min * 10) + (innerToken[j] - '0');
+
+	      if (inDecimal) ++inDecimal;
+            }
+          }
+          // Turn our int into a double if we had decimals
+          //   Note we decrease inDecimal by one (if we had decimals) so
+          //   the while loop works as expected- otherwise we would be off be one
+          inDecimal = inDecimal ? inDecimal - 1 : 0;
+          while (inDecimal) {
+            min = min / 10;
+            --inDecimal;
           }
         }
       }
 
       // Parse Max
       if (numberOfColonTokens == 1) {
-        int j;
+        int j, inDecimal = 0;
         for (j = 0; j < strlen(innerToken); j++) {
-          if (!isdigit(innerToken[j])) {
+          if (!isdigit(innerToken[j]) && (inDecimal && innerToken[j] == '.')) {
             printf("Invalid token '%c' in value '%s' for %s\n\n%s", innerToken[j], token, switchType, helpMessage);
             return 0;
           }
 
-          // Build double from consecutive chars
-          max = (max * 10) + (innerToken[j] - '0');
+          if (innerToken[j] == '.') {
+            inDecimal = 1;
+          } else {
+            // Build int from consecutive chars
+            max = (max * 10) + (innerToken[j] - '0');
+
+            if (inDecimal) ++inDecimal;
+          }
         }
-            
+        // Turn our int into a double if we had decimals
+        //  Note we decrease inDecimal by one (if we had decimals) so 
+        //  the while loop works as expected- otherwise we would be off by one
+        inDecimal = inDecimal ? inDecimal - 1 : 0;
+        while (inDecimal) {
+          max = max / 10;
+          --inDecimal;
+	}
+   
         maxSet = 1;
       }
 
