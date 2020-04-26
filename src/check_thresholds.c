@@ -198,7 +198,10 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
         }
       }
     } else { // Object not found
-      sprintf(UNKNOWNmessages[i], "UNKNOWN - JSON key '%s' not found!\n", jsonKey);
+      char msg[] = "UNKNOWN - JSON key '%s' not found!\n";
+      int len = snprintf(NULL, 0, msg, jsonKey);
+      UNKNOWNmessages[i] = realloc(UNKNOWNmessages[i], len + 1);
+      sprintf(UNKNOWNmessages[i], msg, jsonKey);
       severityLevel = UNKNOWN;
     }
   }
@@ -215,7 +218,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
   }
   for (i = 0; i < numberOfKeys; i++) {
     printf(OKmessages[i]);
-    
+
     free(UNKNOWNmessages[i]);
     free(CRITICALmessages[i]);
     free(WARNINGmessages[i]);
