@@ -36,6 +36,14 @@ int checkHTTPStatusCode(CURL* curl) {
   return UNKNOWN;
 }
 
+// Determines if a key exists in the JSON object
+//   If it does exist, it will be passed back via the third parameter
+//   This wraps json-c's json_object_object_get_ex() method to allow us to use
+//   our argument syntax to extract the field
+json_bool getJSONKeyValue(json_object* json, char* key, struct json_object** returnedObject) {
+  return json_object_object_get_ex(json, key, returnedObject); 
+}
+
 // Checks HTTP body against -K parameters, and -w/-c
 // Program can/will exit from here
 int checkHTTPBody(json_object* json, argValues* arguments) {
@@ -77,7 +85,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
 
     // Get the value
     json_object* object;
-    if (json_object_object_get_ex(json, jsonKey, &object)) {
+    if (getJSONKeyValue(json, jsonKey, &object)) {
       json_type type  = json_object_get_type(object);
     
       // Require type to be a number before checking
