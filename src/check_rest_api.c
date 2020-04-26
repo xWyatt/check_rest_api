@@ -46,29 +46,35 @@ void end(int exitCode) {
 // Callback after cURL.. does its thing
 size_t write_data(void *buf, size_t size, size_t nmemb, void *userp) {
 
-  if (nmemb == 1) {
-    body->size = 0;
-    body->payload = NULL;
-    return nmemb;
-  }  
+  // First run - initalize everything
+  if (body->size == 0) {
+    // Set size of body. Data + 1 for null terminator
+    body->size = nmemb + 1;
 
-  // Size of body plus null terminator
-  body->size = nmemb + 1;
-  
-  // Expand our payload to account for the actual payload
-  body->payload = (char*) malloc(body->size + 1);
+    body->payload = (char *) malloc(body->size);
 
-  if (body->payload == NULL) {
+    // If Malloc failed, signal to handler to use HTTP Status code
+    if (body->payload == NULL) {
+      body->size = 0;
+    } else {
+      memcpy(body->payload, buf, body->size);
+      body->payload[nmemb] = '\0';
+    }
+  } else { // All other runs - append data
 
-    // Malloc failed. Signal to handler to use HTTP Status code
-    body->size = 0;
-  } else {
-
-    // Copy payload and set null terminiating byte
-    memcpy(body->payload, buf, body->size - 1);
-    body->payload[nmemb] = '\0';
+    // Set new body size
+    body->size += nmemb;
+    
+    // Overwrite payload with new data
+    body->payload = (char *) realloc(body->payload, body->size);
+   
+    if (body->payload == NULL) {
+      body->size = 0;
+    } else {
+      strncat(body->payload, buf, nmemb);
+    }
   }
-
+  
   return nmemb;
 }
 
@@ -105,7 +111,7 @@ void* callAPI(void) {
 
 // Parses JSON
 void parseJSON(json_object** json) {
-  
+
   if (body->size == 0) return;
 
   json_tokener* tok = json_tokener_new();
@@ -130,6 +136,7 @@ int main(int argc, char** argv) {
   // Initialize our body
   body = malloc(sizeof(struct cURLHTTPBody));
   body->payload = NULL;
+  body->size = 0;
 
   if (!validateArguments(argc, argv)) end(UNKNOWN);
 
