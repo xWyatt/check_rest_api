@@ -40,8 +40,34 @@ int checkHTTPStatusCode(CURL* curl) {
 //   If it does exist, it will be passed back via the third parameter
 //   This wraps json-c's json_object_object_get_ex() method to allow us to use
 //   our argument syntax to extract the field
-json_bool getJSONKeyValue(json_object* json, char* key, struct json_object** returnedObject) {
-  return json_object_object_get_ex(json, key, returnedObject); 
+json_bool getJSONKeyValue(json_object* json, char* key, json_object** returnedObject) {
+
+  char* token;
+  token = strtok(key, ".");
+
+  if (token == NULL) { // No complex objects
+    return json_object_object_get_ex(json, key, returnedObject);
+  }
+
+  json_object* object;
+  json_bool status;
+
+  // Try to drill down through the JSON object
+  status = json_object_object_get_ex(json, token, &object);
+  if (!status) return status;
+  token = strtok(NULL, ".");
+  while (token != NULL) {
+    status = json_object_object_get_ex(object, token, &object);
+
+    // This child object does not exist. Return 
+    if (!status) return status;
+
+    token = strtok(NULL, ".");  
+  }
+
+  // Pass back our found object
+  *returnedObject = object; 
+  return status;
 }
 
 // Checks HTTP body against -K parameters, and -w/-c
@@ -83,11 +109,11 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
   for (i = 0; i < numberOfKeys; i++) {
     char* jsonKey = keys[i];
 
-    // Get the value
+    // Get the valued
     json_object* object;
     if (getJSONKeyValue(json, jsonKey, &object)) {
       json_type type  = json_object_get_type(object);
-    
+   
       // Require type to be a number before checking
       if (type != json_type_int && type != json_type_double) {
 
