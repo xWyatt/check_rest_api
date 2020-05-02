@@ -45,19 +45,123 @@ json_bool getJSONKeyValue(json_object* json, char* key, json_object** returnedOb
   char* token;
   token = strtok(key, ".");
 
-  if (token == NULL) { // No complex objects
+  if (token == NULL) { // Not sure what to do. let JSON-C handle it
     return json_object_object_get_ex(json, key, returnedObject);
   }
 
   json_object* object;
   json_bool status;
 
+  // Is the requested object actually array?
+  char* arrKey;
+  arrKey = strchr(key, '[');
+  if (arrKey != NULL) { // Yup
+
+    // Extract key name
+    char* actualKey = malloc(strlen(key) - strlen(arrKey));
+    if (actualKey == NULL) return 0;
+    int i;
+    for (i = 0; i < (strlen(key) - strlen(arrKey)); i++) {
+      actualKey[i] = key[i];
+    } 
+    actualKey[i] = '\0'; // Terminate the string     
+ 
+    // Extract index
+    char* index = malloc(strlen(arrKey) - 2);
+    if (index == NULL) return 0;
+    for (i = 1; i < (strlen(arrKey) - 1); i++) {
+      index[i-1] = arrKey[i];
+    }
+    index[i-1] = '\0'; // Termiate the string
+
+    // Turns index into a number
+    int idx;
+    for (i = 0, idx = 0; i < strlen(index); i++) {
+      idx = (idx * 10) + (index[i] - '0');
+    }
+
+    // Does the presumed 'array' JSON object exist?
+    if (json_object_object_get_ex(json, actualKey, &object)) {
+      // It does. Verify it is an array
+      json_type type = json_object_get_type(object);
+      if (type == json_type_array) {
+        object = json_object_array_get_idx(object, idx); 
+        free(actualKey);
+        free(index);
+        status = 1; 
+      } else { // Not an array
+        free(actualKey);
+        free(index);
+        status = 0;
+      }
+    } else {
+      // Object does not exist
+      free(actualKey);
+      free(index);
+      status = 0;
+    }
+  } else {
+    // Not an array, normal JSOn object
+    status = json_object_object_get_ex(json, token, &object);
+  }
+
   // Try to drill down through the JSON object
-  status = json_object_object_get_ex(json, token, &object);
   if (!status) return status;
   token = strtok(NULL, ".");
   while (token != NULL) {
-    status = json_object_object_get_ex(object, token, &object);
+
+    // Is the requested object actually array?
+    char* arrKey;
+    arrKey = strchr(token, '[');
+    if (arrKey != NULL) { // Yup
+
+      // Extract key name
+      char* actualKey = malloc(strlen(token) - strlen(arrKey));
+      if (actualKey == NULL) return 0;
+      int i;
+      for (i = 0; i < (strlen(token) - strlen(arrKey)); i++) {
+        actualKey[i] = token[i];
+      } 
+      actualKey[i] = '\0'; // Terminate the string     
+ 
+      // Extract index
+      char* index = malloc(strlen(arrKey) - 2);
+      if (index == NULL) return 0;
+      for (i = 1; i < (strlen(arrKey) - 1); i++) {
+        index[i-1] = arrKey[i];
+      }
+      index[i-1] = '\0'; // Termiate the string
+
+      // Turns index into a number
+      int idx;
+      for (i = 0, idx = 0; i < strlen(index); i++) {
+        idx = (idx * 10) + (index[i] - '0');
+      }
+
+      // Does the presumed 'array' JSON object exist?
+      if (json_object_object_get_ex(object, actualKey, &object)) {
+        // It does. Verify it is an array
+        json_type type = json_object_get_type(object);
+        if (type == json_type_array) {
+          object = json_object_array_get_idx(object, idx); 
+          free(actualKey);
+          free(index);
+          status = 1; 
+        } else { // Not an array
+          free(actualKey);
+          free(index);
+          status = 0;
+        }
+      } else {
+        // Object does not exist
+        free(actualKey);
+        free(index);
+        status = 0;
+      }
+    } else {
+      // Not an array, normal JSOn object
+      status = json_object_object_get_ex(object, token, &object);
+    }
 
     // This child object does not exist. Return 
     if (!status) return status;
@@ -107,11 +211,16 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
 
   // Check each key for 'validity'
   for (i = 0; i < numberOfKeys; i++) {
-    char* jsonKey = keys[i];
+    // Copy the json key string to print later
+    int j;
+    char* jsonKey = malloc(strlen(keys[i]));
+    if (jsonKey == NULL) return 0;
+    for (j = 0; j < strlen(keys[i]); j++) { jsonKey[j] = keys[i][j]; }
+    jsonKey[j] = '\0';
 
-    // Get the valued
+    // Get the value
     json_object* object;
-    if (getJSONKeyValue(json, jsonKey, &object)) {
+    if (getJSONKeyValue(json, keys[i], &object)) {
       json_type type  = json_object_get_type(object);
    
       // Require type to be a number before checking
