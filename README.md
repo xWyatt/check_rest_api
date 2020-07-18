@@ -16,7 +16,8 @@ Usage for a Nagios Command will be nearly identical.
 | `--key` | `-K` | A comma-delimited list of JSON keys to check. More detail on accessing JSON keys are below |
 | `--critical` | `-c` | A comma-delimited list of 'critical' value criteria. Each entry corresponds to a `--key` entry. See Nagios Plugin documentation on critical values |
 | `--warning` | `-w` | A comma-delimited list of 'warning' value criteria. Each entry corresponds to a `--key` entry. See Nagios Plugin documentation on warning values |
-| `--timeout` | `-t` | Sets a custom timeout, in seconds, to abort the HTTP request should the remote server not respond. Defaults to `10` seconds.
+| `--timeout` | `-t` | Sets a custom timeout, in seconds, to abort the HTTP request should the remote server not respond. Defaults to `10` seconds. |
+| `--insecure` | `-k` | Disables checking peer's SSL certificate (if using SSL/HTTPS). Not recommended to use |
 
 ### Example Usage
 `Note`: Tildes (~) are escaped here as a normal BaSH will expand that to the users home directory. You needn't escape a tilde when writing a custom Nagios Command. 

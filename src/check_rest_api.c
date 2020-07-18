@@ -95,6 +95,10 @@ void* callAPI(void) {
       curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
     }
 
+    if (argVals->insecureSSL == 1) {
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST,  0);
+    }
+
     res = curl_easy_perform(curl);
 
     // This is the only place, besides main() that returns

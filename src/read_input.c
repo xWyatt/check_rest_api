@@ -264,6 +264,7 @@ int validateArguments(int argc, char** argv) {
   argVals->criticalMax = NULL;
   argVals->criticalInclusive = NULL;
   argVals->timeout = 10L;
+  argVals->insecureSSL = 0;
 
   // Require arguments
   if (argc == 1) {
@@ -433,6 +434,13 @@ int validateArguments(int argc, char** argv) {
         argVals->timeout = (argVals->timeout * 10) + (nextArg[i] - '0');
       }
 
+      continue;
+    }
+
+    // Insecure SSL
+    if (strcmp(arg, "-k") == 0 || strcmp(arg, "--insecure") == 0) {
+      // Set our insecure SSL Flag
+      argVals->insecureSSL = 1;
       continue;
     }
 

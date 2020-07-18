@@ -14,6 +14,7 @@ typedef struct argValues {
   double* criticalMin;
   int* criticalInclusive;
   long timeout;
+  int insecureSSL;
 } argValues;
 
 struct argValues* argVals;
