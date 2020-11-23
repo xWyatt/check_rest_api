@@ -96,7 +96,7 @@ void* callAPI(void) {
     }
 
     if (argVals->insecureSSL == 1) {
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST,  0);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER,  0);
     }
 
     res = curl_easy_perform(curl);
