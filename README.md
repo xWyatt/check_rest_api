@@ -28,7 +28,7 @@ Usage for a Nagios Command will be nearly identical.
 
 # Check an API endpoint and send a 'warning' value if the 
 # JSON key `files` is less than `23`
-./check_rest_api -H http://www.conttoso.com/api/endpoint2 -K files 23:
+./check_rest_api -H http://www.contoso.com/api/endpoint2 -K files 23:
 
 # Check an API endpoint and send a 'warning' if the JSON key `ram` is above `75` 
 # and a 'critical' if it is above `80`
