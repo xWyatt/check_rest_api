@@ -13,21 +13,21 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
     Print detailed help screen\n\
   -V, --version\n\
     Print Version information\n\
-  -b, --auth-basic=<username>:<password>\n\
+  -b, --auth-basic <username>:<password>\n\
     Uses HTTP Basic authentication\n\
-  -H, --hostname=HOSTNAME\n\
+  -H, --hostname HOSTNAME\n\
     The hostname, or IP address of the API you want to check\n\
-  -K, --key=jsonKey\n\
+  -K, --key jsonKey\n\
     Optional; a comma delimited list of JSON keys to check. The value of this key must be a number\n\
      If not provided, check_rest_api will check the HTTP status code. Anything < 400 will return OK,\n\
      Anthing >=400 and < 500 will return WARNING, and >= 500 will return CRITICAL.\n\
-  -w, --warning=warningThreshold\n\
+  -w, --warning warningThreshold\n\
     Optional; a comma delimited list of WARNING thresholds that map to the corresponding -K, --key (JSON key)\n\
       Returns WARNING if the corresponding --key is outside the defined -w range\n\
-  -c, --critical=criticalThreshold\n\
+  -c, --critical criticalThreshold\n\
     Optiona; a comma delimited list of CRITICAL thresholds that map to the corresponding -K, --key (JSON key)\n\
       Returns CRITICAL if the corresponding --key is outisde the defined -c range\n\
-  -t, --timeout=timeoutValue\n\
+  -t, --timeout timeoutValue\n\
     Optional, seconds before connection times out (default: 10 seconds)\n\
   \nReport Bugs to: teeterwyatt@gmail.com\n";
 
