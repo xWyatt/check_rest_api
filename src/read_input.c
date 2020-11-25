@@ -291,14 +291,14 @@ int validateArguments(int argc, char** argv) {
 
     // Help Message
     if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0) {
-      printf(version);
-      printf(helpMessage);
+      printf("%s", version);
+      printf("%s", helpMessage);
       return 0;
     }
 
     // Version
     if (strcmp(arg, "-V") == 0 || strcmp(arg, "--version") == 0){
-      printf(version);
+      printf("%s", version);
       return 0;
     };
 
@@ -509,7 +509,6 @@ int validateArguments(int argc, char** argv) {
 
     // Bad argument
     printf("Bad argument: %s\n\n%s", arg, helpMessage);
-    printf(helpMessage);
     return 0;
   }
   

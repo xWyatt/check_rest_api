@@ -351,16 +351,16 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
 
   // Print everything in order of UNKNOWN, then CRITICAL, WARNING, and finally OK
   for (i = 0; i < numberOfKeys; i++) {
-    printf(UNKNOWNmessages[i]);
+    printf("%s", UNKNOWNmessages[i]);
   }
   for (i = 0; i < numberOfKeys; i++) {
-    printf(CRITICALmessages[i]);
+    printf("%s", CRITICALmessages[i]);
   }
   for (i = 0; i < numberOfKeys; i++) {
-    printf(WARNINGmessages[i]); 
+    printf("%s", WARNINGmessages[i]); 
   }
   for (i = 0; i < numberOfKeys; i++) {
-    printf(OKmessages[i]);
+    printf("%s", OKmessages[i]);
 
     free(UNKNOWNmessages[i]);
     free(CRITICALmessages[i]);
