@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
+#include <unistd.h>
 
 #include "headers/read_input.h"
 #include "headers/check_rest_api.h"
@@ -14,7 +15,10 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
   -V, --version\n\
     Print Version information\n\
   -b, --auth-basic <username>:<password>\n\
-    Uses HTTP Basic authentication\n\
+    Uses HTTP Basic authentication with provided <username> and <password>\n\
+  -bf, --auth-basic-file <filename> \n\
+    Uses HTTP Basic authentication and takes the required 'username:password' from the file provided\n\
+    This file should only have one line that contains text in the format '<username>:<password>' (Excluding quotes)\n\
   -H, --hostname HOSTNAME\n\
     The hostname, or IP address of the API you want to check\n\
   -K, --key jsonKey\n\
@@ -298,7 +302,7 @@ int validateArguments(int argc, char** argv) {
       return 0;
     };
 
-    // Basic Auth
+    // Basic Auth - CLI
     if (strcmp(arg, "-b") == 0 || strcmp(arg, "--auth-basic") == 0) {
       if (nextArg[0] == '-') {
         printf("Invalid value for -b, --auth-basic. Must be a string of <username>:<password>\n\n%s", helpMessage);
@@ -325,7 +329,66 @@ int validateArguments(int argc, char** argv) {
    
       continue;
     }
-   
+
+    // Basic Auth - File
+    if (strcmp(arg, "-bf") == 0 || strcmp(arg, "--auth-basic-file") == 0) {
+      if (nextArg[0] == '-') {
+        printf("Invalid value for -bf, --auth-basic-file. Must be a file path.\n\n%s", helpMessage);
+        return 0;
+      }
+
+      // Verify file exists and we can read it
+      if (access(nextArg, R_OK) != -1) {
+      
+        // Open File
+        FILE *basicAuthFile = (FILE*) fopen(nextArg, "r");
+
+        // Read line into buffer
+        char* buffer = NULL;
+        size_t len;
+        if (getline(&buffer, &len, basicAuthFile)) {
+          // Remove newline from line
+          buffer[strlen(buffer) - 1] = '\0';
+
+          // Split into username and password
+          char* password = strpbrk(buffer, ":");
+
+          if (password == NULL) {
+            printf("Bad data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage); 
+          }
+
+          password[0] = '\0';
+          password = password + 1;
+
+          argVals->username = (char *) malloc(strlen(buffer) * sizeof(char) + 1);
+          argVals->password = (char *) malloc(strlen(password) * sizeof(char) + 1);
+          if (argVals->username == NULL || argVals->password == NULL) {
+            printf("Bad data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage); 
+            return 0;
+          }
+          
+          strcpy(argVals->username, buffer);
+          strcpy(argVals->password, password);
+
+
+          // Cleanup
+          fclose(basicAuthFile);
+          free(buffer);
+
+          continue;
+        } else {
+          // Error; cleanup
+          fclose(basicAuthFile);
+          free(buffer);
+          printf("No data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage); 
+          return 0;
+        }
+      } else {
+        printf("Cannot read from file '%s' to retrieve Basic Auth credentials. Verify the file exists and has read permission.\n\n%s", nextArg, helpMessage);
+        return 0;
+      }
+    }
+
     // Hostname
     if (strcmp(arg, "-H") == 0 || strcmp(arg, "--hostname") == 0) {
       if (nextArg[0] == '-') {
