@@ -39,6 +39,12 @@ Usage for a Nagios Command will be nearly identical.
 # 60 or `ram` is above `63`, and a 'critical' if `cpu` 
  #is above `70` or `ram` is above `83`
 ./check_rest_api -H http://www.contoso.com/api/endpoint4 -K cpu,ram -w \~:60,\~:63 -c \~:70,\~:83
+
+# Check an API endpoint with HTTP Basic Auth (via CLI)
+./check_rest_api -H http://www.contoso.com --auth-basic username:password
+
+# Check an API endpoint with HTTP Basic Auth (with file). The file ./test has one line with the string "username:password" to use for HTTP Basic Auth
+./check_rest_api -H http://www.contoso.com --auth-basic-file ./test
 ```  
 
 ## Compiling
