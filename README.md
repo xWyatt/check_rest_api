@@ -12,7 +12,7 @@ Usage for a Nagios Command will be nearly identical.
 | &nbsp; &nbsp;Name/Option &nbsp; &nbsp;  | Shorthand | Description  |
 |---|:-:|--|
 | `--hostname` | `-H` | Full address to the REST API endpoint |
-| `--auth-basic` | `-b` | A string in the form `<username>:<assword>` that is used for HTTP Basic Auth |
+| `--auth-basic` | `-b` | A string in the form `<username>:<password>` that is used for HTTP Basic Auth |
 | `--auth-basic-file` | `-bf` | Filepath to a file that contains one line in the format `<username>:<password>` that is used for HTTP Basic Auth
 | `--key` | `-K` | A comma-delimited list of JSON keys to check. More detail on accessing JSON keys are below |
 | `--critical` | `-c` | A comma-delimited list of 'critical' value criteria. Each entry corresponds to a `--key` entry. See Nagios Plugin documentation on critical values |
