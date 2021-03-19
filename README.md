@@ -2,7 +2,7 @@
 This program can be used with Nagios to hit a REST API and compare values to monitor services.
 
 ## Installation
-Install this program by downloading the proper version for your operation system on the [releases](https://github.com/xWyatt/check_rest_api/releases) page, then drop the executable in the `libexec/` folder of your Nagios installation.
+Install this program by downloading the proper version for your operation system on the [releases](https://github.com/kenanrizvic/check_rest_api/releases) page, then drop the executable in the `libexec/` folder of your Nagios installation.
 
 After installing this program you can create custom commands in Nagios to utilize it. Reference the Nagios user manual for more information on custom commands.
  
