@@ -21,7 +21,7 @@ int checkHTTPStatusCode(CURL* curl) {
     return OK;
   }
 
-  
+
   if (httpResponseCode < 500) {
     printf("WARNING - Unexpected HTTP response code: %ld\n", httpResponseCode);
     return WARNING;
@@ -63,9 +63,9 @@ json_bool getJSONKeyValue(json_object* json, char* key, json_object** returnedOb
     int i;
     for (i = 0; i < (strlen(key) - strlen(arrKey)); i++) {
       actualKey[i] = key[i];
-    } 
-    actualKey[i] = '\0'; // Terminate the string     
- 
+    }
+    actualKey[i] = '\0'; // Terminate the string
+
     // Extract index
     char* index = malloc(strlen(arrKey) - 2);
     if (index == NULL) return 0;
@@ -85,10 +85,10 @@ json_bool getJSONKeyValue(json_object* json, char* key, json_object** returnedOb
       // It does. Verify it is an array
       json_type type = json_object_get_type(object);
       if (type == json_type_array) {
-        object = json_object_array_get_idx(object, idx); 
+        object = json_object_array_get_idx(object, idx);
         free(actualKey);
         free(index);
-        status = 1; 
+        status = 1;
       } else { // Not an array
         free(actualKey);
         free(index);
@@ -121,9 +121,9 @@ json_bool getJSONKeyValue(json_object* json, char* key, json_object** returnedOb
       int i;
       for (i = 0; i < (strlen(token) - strlen(arrKey)); i++) {
         actualKey[i] = token[i];
-      } 
-      actualKey[i] = '\0'; // Terminate the string     
- 
+      }
+      actualKey[i] = '\0'; // Terminate the string
+
       // Extract index
       char* index = malloc(strlen(arrKey) - 2);
       if (index == NULL) return 0;
@@ -143,10 +143,10 @@ json_bool getJSONKeyValue(json_object* json, char* key, json_object** returnedOb
         // It does. Verify it is an array
         json_type type = json_object_get_type(object);
         if (type == json_type_array) {
-          object = json_object_array_get_idx(object, idx); 
+          object = json_object_array_get_idx(object, idx);
           free(actualKey);
           free(index);
-          status = 1; 
+          status = 1;
         } else { // Not an array
           free(actualKey);
           free(index);
@@ -163,14 +163,14 @@ json_bool getJSONKeyValue(json_object* json, char* key, json_object** returnedOb
       status = json_object_object_get_ex(object, token, &object);
     }
 
-    // This child object does not exist. Return 
+    // This child object does not exist. Return
     if (!status) return status;
 
-    token = strtok(NULL, ".");  
+    token = strtok(NULL, ".");
   }
 
   // Pass back our found object
-  *returnedObject = object; 
+  *returnedObject = object;
   return status;
 }
 
@@ -196,17 +196,17 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
 
   int i;
 
-  // Allocate blank values for our messages  
-  for (i = 0; i < numberOfKeys; i++) { 
+  // Allocate blank values for our messages
+  for (i = 0; i < numberOfKeys; i++) {
     OKmessages[i] = malloc(1);
     WARNINGmessages[i] = malloc(1);
     CRITICALmessages[i] = malloc(1);
     UNKNOWNmessages[i] = malloc(1);
 
-    OKmessages[i][0] = '\0'; 
-    WARNINGmessages[i][0] = '\0'; 
-    CRITICALmessages[i][0] = '\0'; 
-    UNKNOWNmessages[i][0] = '\0'; 
+    OKmessages[i][0] = '\0';
+    WARNINGmessages[i][0] = '\0';
+    CRITICALmessages[i][0] = '\0';
+    UNKNOWNmessages[i][0] = '\0';
   }
 
   // Check each key for 'validity'
@@ -222,7 +222,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
     json_object* object;
     if (getJSONKeyValue(json, keys[i], &object)) {
       json_type type  = json_object_get_type(object);
-   
+
       // Require type to be a number before checking
       if (type != json_type_int && type != json_type_double) {
 
@@ -235,15 +235,15 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
       } else {
 
         double value = json_object_get_double(object);
-      
+
         // Check Critical, if applicable
         if (arguments->criticalMin != NULL) {
-        
+
           int min, max, inclusive;
           min = arguments->criticalMin[i];
           max = arguments->criticalMax[i];
           inclusive = arguments->criticalInclusive[i];
-        
+
           if (inclusive) {
 
             if (value <= min || value >= max) {
@@ -253,30 +253,30 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
               CRITICALmessages[i] = realloc(CRITICALmessages[i], len + 1);
               sprintf(CRITICALmessages[i], msg, jsonKey, value);
 
-              if (severityLevel < WARNING) severityLevel = WARNING;
+              if (severityLevel < WARNING) severityLevel = CRITICAL;
             } else {
 
               char msg[] = "OK - '%s' is %g\n";
               int len = snprintf(NULL, 0, msg, jsonKey, value);
-              OKmessages[i] = realloc(OKmessages[i], len + 1);      
+              OKmessages[i] = realloc(OKmessages[i], len + 1);
               sprintf(OKmessages[i], msg, jsonKey, value);
             }
 
           } else {
 
             if (value < min || value > max) {
-              
+
               char msg[] = "CRITICAL - '%s' is %g\n";
               int len = snprintf(NULL, 0, msg, jsonKey, value);
               CRITICALmessages[i] = realloc(CRITICALmessages[i], len + 1);
               sprintf(CRITICALmessages[i], msg, jsonKey, value);
 
-              if (severityLevel < WARNING) severityLevel = WARNING;
-            } else {           
+              if (severityLevel < WARNING) severityLevel = CRITICAL;
+            } else {
 
               char msg[] = "OK - '%s' is %g\n";
               int len = snprintf(NULL, 0, msg, jsonKey, value);
-              OKmessages[i] = realloc(OKmessages[i], len + 1);      
+              OKmessages[i] = realloc(OKmessages[i], len + 1);
               sprintf(OKmessages[i], msg, jsonKey, value);
             }
           }
@@ -284,12 +284,12 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
 
         // Check Warning, if applicable (We set WARNING, and CRITICAL isn't set)
         if (arguments->warningMin != NULL && strlen(CRITICALmessages[i]) == 0) {
-        
+
           int min, max, inclusive;
           min = arguments->warningMin[i];
           max = arguments->warningMax[i];
           inclusive = arguments->warningInclusive[i];
-        
+
           if (inclusive) {
 
             if (value <= min || value >= max) {
@@ -317,7 +317,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
           } else {
 
             if (value < min || value > max) {
-      
+
               char msg[] = "WARNING - '%s' is %g\n";
               int len = snprintf(NULL, 0, msg, jsonKey, value);
               WARNINGmessages[i] = realloc(WARNINGmessages[i], len + 1);
@@ -357,7 +357,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
     printf("%s", CRITICALmessages[i]);
   }
   for (i = 0; i < numberOfKeys; i++) {
-    printf("%s", WARNINGmessages[i]); 
+    printf("%s", WARNINGmessages[i]);
   }
   for (i = 0; i < numberOfKeys; i++) {
     printf("%s", OKmessages[i]);

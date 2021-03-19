@@ -7,6 +7,7 @@
 
 #include "headers/read_input.h"
 #include "headers/check_rest_api.h"
+extern struct argValues* argVals;
 
 // Help Message
 char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
@@ -52,7 +53,7 @@ int parseWarningOrCriticalValues(char* value, char type) {
     switchType = malloc(14);
     if (switchType == NULL) {
       printf("Error allocating heap space!\n");
-      return 0; 
+      return 0;
     }
     strcpy(switchType, "-w, --warning");
   } else if (type == 'c') {
@@ -74,11 +75,11 @@ int parseWarningOrCriticalValues(char* value, char type) {
     printf("Value required for %s\n\n%s", switchType, helpMessage);
     return 0;
   }
-      
+
   while (token != NULL) {
     if (numberOfTokens > argVals->numberOfKeys) {
       break;
-    } 
+    }
 
     // Parse out the user input
     // Grammar is [@][<min>:]<max>
@@ -103,7 +104,7 @@ int parseWarningOrCriticalValues(char* value, char type) {
       if (numberOfColonTokens == 0) {
         if (innerToken[0] == '@') {
           inclusive = 1;
-        } 
+        }
 
         else if (innerToken[0] == '~') {
           min = -INFINITY;
@@ -121,11 +122,11 @@ int parseWarningOrCriticalValues(char* value, char type) {
               printf("Invalid token '%c' in value '%s' for %s\n\n%s", innerToken[j], token, switchType, helpMessage);
               return 0;
             }
- 
+
 	    if (innerToken[j] == '.') {
               inDecimal = 1;
 	    } else {
-	      // Build int from consecutive chars                        
+	      // Build int from consecutive chars
               min = (min * 10) + (innerToken[j] - '0');
 
 	      if (inDecimal) ++inDecimal;
@@ -161,14 +162,14 @@ int parseWarningOrCriticalValues(char* value, char type) {
           }
         }
         // Turn our int into a double if we had decimals
-        //  Note we decrease inDecimal by one (if we had decimals) so 
+        //  Note we decrease inDecimal by one (if we had decimals) so
         //  the while loop works as expected- otherwise we would be off by one
         inDecimal = inDecimal ? inDecimal - 1 : 0;
         while (inDecimal) {
           max = max / 10;
           --inDecimal;
 	}
-   
+
         maxSet = 1;
       }
 
@@ -319,14 +320,14 @@ int validateArguments(int argc, char** argv) {
       // password[0] is the ':' of <username>:<password>. ':' designates the end of the username
       password[0] = '\0';
       password = password + 1; // Skip over the ':'
-  
+
       argVals->username = (char *) malloc(strlen(nextArg) * sizeof(char) + 1);
       argVals->password = (char *) malloc(strlen(password) * sizeof(char) + 1);
       if (argVals->username == NULL || argVals->password == NULL) return 0;
 
       strcpy(argVals->username, nextArg);
       strcpy(argVals->password, password);
-   
+
       continue;
     }
 
@@ -339,7 +340,7 @@ int validateArguments(int argc, char** argv) {
 
       // Verify file exists and we can read it
       if (access(nextArg, R_OK) != -1) {
-      
+
         // Open File
         FILE *basicAuthFile = (FILE*) fopen(nextArg, "r");
 
@@ -354,7 +355,7 @@ int validateArguments(int argc, char** argv) {
           char* password = strpbrk(buffer, ":");
 
           if (password == NULL) {
-            printf("Bad data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage); 
+            printf("Bad data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage);
           }
 
           password[0] = '\0';
@@ -363,10 +364,10 @@ int validateArguments(int argc, char** argv) {
           argVals->username = (char *) malloc(strlen(buffer) * sizeof(char) + 1);
           argVals->password = (char *) malloc(strlen(password) * sizeof(char) + 1);
           if (argVals->username == NULL || argVals->password == NULL) {
-            printf("Bad data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage); 
+            printf("Bad data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage);
             return 0;
           }
-          
+
           strcpy(argVals->username, buffer);
           strcpy(argVals->password, password);
 
@@ -380,7 +381,7 @@ int validateArguments(int argc, char** argv) {
           // Error; cleanup
           fclose(basicAuthFile);
           free(buffer);
-          printf("No data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage); 
+          printf("No data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage);
           return 0;
         }
       } else {
@@ -399,14 +400,14 @@ int validateArguments(int argc, char** argv) {
       argVals->hostname = (char*) malloc(strlen(nextArg) * sizeof(char) + 1);
       if (argVals->hostname == NULL) return 0;
 
-      strcpy(argVals->hostname, nextArg);    
-      
+      strcpy(argVals->hostname, nextArg);
+
       continue;
     }
 
     // JSON Key
     if (strcmp(arg, "-K") == 0 || strcmp(arg, "--key") == 0) {
-      
+
       if (nextArg[0] == '-') {
         printf("Invalid value for -K, --key. This must be a comma-delimited list of strings.\n\n%s", helpMessage);
         return 0;
@@ -419,9 +420,9 @@ int validateArguments(int argc, char** argv) {
         return 0;
       }
 
-      while (token != NULL) {       
+      while (token != NULL) {
 
-        // Reize array 
+        // Reize array
         if (argVals->keys == NULL) {
           argVals->keys = malloc(sizeof(char*));
           if (argVals->keys == NULL) {
@@ -440,14 +441,14 @@ int validateArguments(int argc, char** argv) {
         if (argVals->keys[argVals->numberOfKeys] == NULL) {
            printf("Error allocating space for argVals->keys!\n");
          return 0;
-        }   
+        }
 
         strcpy(argVals->keys[argVals->numberOfKeys], token);
         ++argVals->numberOfKeys;
 
-        token = strtok(NULL, ","); 
+        token = strtok(NULL, ",");
       }
-  
+
       continue;
     }
 
@@ -468,11 +469,11 @@ int validateArguments(int argc, char** argv) {
 
     // Critical threshold
     if (strcmp(arg, "-c") == 0 || strcmp(arg, "--critical") == 0) {
-      
+
       if (nextArg[0] == '-') {
         printf("Invalid value for -c, --critical. See Nagios Plugin documentation\n\n%s", helpMessage);
         return 0;
-      }  
+      }
 
       if (!parseWarningOrCriticalValues(nextArg, 'c')) {
         return 0;
@@ -511,6 +512,6 @@ int validateArguments(int argc, char** argv) {
     printf("Bad argument: %s\n\n%s", arg, helpMessage);
     return 0;
   }
-  
+
   return 1;
 }

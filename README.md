@@ -56,5 +56,7 @@ To compile the program from scratch:
 
 ### Dependencies:
 `check_rest_api` has only two external dependencies:
-- [`libcurl`](https://curl.haxx.se/libcurl/) - for making HTTP/HTTPS calls and retrieving data from a REST API
-- [`JSON-C`](https://github.com/json-c/json-c) - for parsing JSON results from an API                                                                                                                                                                                                                       - Make sure your dependencies are installed                                                                                                                                                                                                  - `make`                                                                                                                                                                                                                                                                                                                                                                                                                            
+- [`libcurl`](https://curl.haxx.se/libcurl/) - for making HTTP/HTTPS calls and retrieving data from a REST API or for rhel/centos use package curl-devel
+- [`JSON-C`](https://github.com/json-c/json-c) - for parsing JSON results from an API or use json-c-devel package on RHEL/Centos
+- Make sure your dependencies are installed 
+- make 
