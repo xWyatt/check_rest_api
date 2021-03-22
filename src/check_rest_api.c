@@ -14,8 +14,6 @@
 CURL* curl;
 struct cURLHTTPBody* body;
 struct argValues* argVals;
-
-
 // Cleanup
 void end(int exitCode) {
 
@@ -26,7 +24,7 @@ void end(int exitCode) {
 
   free(argVals->hostname);
   free(argVals->username);
-  free(argVals->password);
+  free(argVals->password);  
 
   int i;
   for (i = 0; i < argVals->numberOfKeys; i++) {
@@ -66,17 +64,17 @@ size_t write_data(void *buf, size_t size, size_t nmemb, void *userp) {
 
     // Set new body size
     body->size += nmemb;
-
+    
     // Overwrite payload with new data
     body->payload = (char *) realloc(body->payload, body->size);
-
+   
     if (body->payload == NULL) {
       body->size = 0;
     } else {
       strncat(body->payload, buf, nmemb);
     }
   }
-
+  
   return nmemb;
 }
 
@@ -87,7 +85,7 @@ void* callAPI(void) {
   curl = curl_easy_init();
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, argVals->hostname);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);    
 
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, argVals->timeout);
 

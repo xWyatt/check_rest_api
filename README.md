@@ -2,7 +2,7 @@
 This program can be used with Nagios to hit a REST API and compare values to monitor services.
 
 ## Installation
-Install this program by downloading the proper version for your operation system on the [releases](https://github.com/kenanrizvic/check_rest_api/releases) page, then drop the executable in the `libexec/` folder of your Nagios installation.
+Install this program by downloading the proper version for your operation system on the [releases](https://github.com/xWyatt/check_rest_api/releases) page, then drop the executable in the `libexec/` folder of your Nagios installation.
 
 After installing this program you can create custom commands in Nagios to utilize it. Reference the Nagios user manual for more information on custom commands.
  
@@ -56,7 +56,5 @@ To compile the program from scratch:
 
 ### Dependencies:
 `check_rest_api` has only two external dependencies:
-- [`libcurl`](https://curl.haxx.se/libcurl/) - for making HTTP/HTTPS calls and retrieving data from a REST API or for rhel/centos use package curl-devel
-- [`JSON-C`](https://github.com/json-c/json-c) - for parsing JSON results from an API or use json-c-devel package on RHEL/Centos
-- Make sure your dependencies are installed 
-- make 
+- [`libcurl`](https://curl.haxx.se/libcurl/) - for making HTTP/HTTPS calls and retrieving data from a REST API
+- [`JSON-C`](https://github.com/json-c/json-c) - for parsing JSON results from an API                                                                                                                                                                                                                       - Make sure your dependencies are installed                                                                                                                                                                                                  - `make`                                                                                                                                                                                                                                                                                                                                                                                                                            
