@@ -13,7 +13,7 @@
 // Define our cURL handle and struct, and JSON object
 CURL* curl;
 struct cURLHTTPBody* body;
-
+struct argValues* argVals;
 // Cleanup
 void end(int exitCode) {
 

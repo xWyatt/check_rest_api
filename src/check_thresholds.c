@@ -253,7 +253,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
               CRITICALmessages[i] = realloc(CRITICALmessages[i], len + 1);
               sprintf(CRITICALmessages[i], msg, jsonKey, value);
 
-              if (severityLevel < WARNING) severityLevel = WARNING;
+              if (severityLevel < WARNING) severityLevel = CRITICAL;
             } else {
 
               char msg[] = "OK - '%s' is %g\n";
@@ -271,7 +271,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
               CRITICALmessages[i] = realloc(CRITICALmessages[i], len + 1);
               sprintf(CRITICALmessages[i], msg, jsonKey, value);
 
-              if (severityLevel < WARNING) severityLevel = WARNING;
+              if (severityLevel < WARNING) severityLevel = CRITICAL;
             } else {           
 
               char msg[] = "OK - '%s' is %g\n";

@@ -7,7 +7,7 @@
 
 #include "headers/read_input.h"
 #include "headers/check_rest_api.h"
-
+extern struct argValues* argVals;
 // Help Message
 char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
   -h, --help\n\
