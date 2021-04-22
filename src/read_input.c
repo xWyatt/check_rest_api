@@ -33,6 +33,8 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
       Returns CRITICAL if the corresponding --key is outisde the defined -c range\n\
   -t, --timeout timeoutValue\n\
     Optional, seconds before connection times out (default: 10 seconds)\n\
+  -k, --insecure\n\
+    Disables checking peer's SSL certificate (if using SSL/HTTPS). Not recommended to use\n\
   \nReport Bugs to: teeterwyatt@gmail.com\n";
 
 char version[] = "check_rest_api version: 1.1.0\n";
