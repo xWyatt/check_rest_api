@@ -15,6 +15,8 @@ typedef struct argValues {
   int* criticalInclusive;
   long timeout;
   int insecureSSL;
+  char* header;
+  int debug;
 } argValues;
 
 struct argValues* argVals;
