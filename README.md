@@ -18,6 +18,8 @@ Usage for a Nagios Command will be nearly identical.
 | `--critical` | `-c` | A comma-delimited list of 'critical' value criteria. Each entry corresponds to a `--key` entry. See Nagios Plugin documentation on critical values |
 | `--warning` | `-w` | A comma-delimited list of 'warning' value criteria. Each entry corresponds to a `--key` entry. See Nagios Plugin documentation on warning values |
 | `--timeout` | `-t` | Sets a custom timeout, in seconds, to abort the HTTP request should the remote server not respond. Defaults to `10` seconds. |
+| `--debug` | `-d` | Enable trace mode to see low level data flow in ASCII and HEXADECIMAL representation. |
+| `--header` | `-D` | A string to be added into HTTP request header. |
 | `--insecure` | `-k` | Disables checking peer's SSL certificate (if using SSL/HTTPS). Not recommended to use |
 
 ### Example Usage
