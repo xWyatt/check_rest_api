@@ -33,6 +33,10 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
       Returns CRITICAL if the corresponding --key is outisde the defined -c range\n\
   -t, --timeout timeoutValue\n\
     Optional, seconds before connection times out (default: 10 seconds)\n\
+  -D, --header\n\
+    Optional HTTP Header(s)\n\
+  -d, --debug\n\
+    Enable trace mode for CURL communication\n\
   -k, --insecure\n\
     Disables checking peer's SSL certificate (if using SSL/HTTPS). Not recommended to use\n\
   \nReport Bugs to: teeterwyatt@gmail.com\n";
@@ -404,6 +408,25 @@ int validateArguments(int argc, char** argv) {
       strcpy(argVals->hostname, nextArg);    
       
       continue;
+    }
+
+    // Optional HTTP Header
+    if (strcmp(arg, "-D") == 0 || strcmp(arg, "--header") == 0) {
+       argVals->header = (char*) malloc(strlen(nextArg) * sizeof(char) + 1);
+
+      if (argVals->header == NULL) return 0;
+
+      strcpy(argVals->header, nextArg);
+
+      continue;
+    }
+
+    // Optional Debug ouput
+    if (strcmp(arg, "-d") == 0 || strcmp(arg, "--debug") == 0) {
+     argVals->debug = 1;
+
+     continue;
+
     }
 
     // JSON Key
