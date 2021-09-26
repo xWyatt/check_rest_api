@@ -157,7 +157,7 @@ void* callAPI(void) {
 
   curl = curl_easy_init();
   if (curl) {
-    if (argVals->debug) {
+    if (argVals->debug == 1) {
       curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, my_trace);
       /* the DEBUGFUNCTION has no effect until we enable VERBOSE */
       curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
