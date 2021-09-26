@@ -427,6 +427,7 @@ int validateArguments(int argc, char** argv) {
     if (strcmp(arg, "-d") == 0 || strcmp(arg, "--debug") == 0) {
      argVals->debug = 1;
 
+     i--; // Since no second parm, move i back one to get the next arg
      continue;
 
     }
@@ -531,6 +532,8 @@ int validateArguments(int argc, char** argv) {
     if (strcmp(arg, "-k") == 0 || strcmp(arg, "--insecure") == 0) {
       // Set our insecure SSL Flag
       argVals->insecureSSL = 1;
+
+     i--; // Since no second parm, move i back one to get the next arg
       continue;
     }
 
