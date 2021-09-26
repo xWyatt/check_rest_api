@@ -304,7 +304,7 @@ int validateArguments(int argc, char** argv) {
   // Verify all arguments passed
   int i;
   int lastArgHadNoInput = 0;
-  for (i = 1; i < argc; i += 2) {
+  for (i = 1; i < argc || (i < argc + 1 && lastArgHadNoInput == 1); i += 2) {
 
     // For --insecure and the like that have no nextArg
     if (lastArgHadNoInput == 1) {
