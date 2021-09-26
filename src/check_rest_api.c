@@ -15,6 +15,7 @@ CURL* curl;
 struct cURLHTTPBody* body;
 struct argValues* argVals;
 // Cleanup
+// All char* values must be instantiated as NULL in read_input.c or a double free will occur
 void end(int exitCode) {
 
   curl_easy_cleanup(curl);

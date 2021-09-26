@@ -275,6 +275,7 @@ int validateArguments(int argc, char** argv) {
   argVals->criticalInclusive = NULL;
   argVals->timeout = 10L;
   argVals->insecureSSL = 0;
+  argVals->header = NULL;
 
   // Require arguments
   if (argc == 1) {
