@@ -292,6 +292,8 @@ int validateArguments(int argc, char** argv) {
   argVals->timeout = 10L;
   argVals->insecureSSL = 0;
   argVals->httpMethod = 0;
+  argVals->debug = 0;
+  argVals->header = NULL;
 
   // Require arguments
   if (argc == 1) {
@@ -449,6 +451,7 @@ int validateArguments(int argc, char** argv) {
     if (strcmp(arg, "-d") == 0 || strcmp(arg, "--debug") == 0) {
      argVals->debug = 1;
 
+     i--; // Since no second parm, move i back one to get the next arg
      continue;
 
     }
@@ -574,7 +577,8 @@ int validateArguments(int argc, char** argv) {
         printf("Invalid value for -m/--http-method. This must be 'GET', 'POST', or 'PUT'\n\n%s", helpMessage);
         return 0;
       }
- 
+      
+      i--; // Since no second parm, move i back one to get the next arg
       continue;
     }
 

@@ -1,6 +1,7 @@
 #ifndef CHECK_INPUT
 #define CHECK_INPUT
 
+/* If adding a char* to this list instantiate that value as NULL in read_input.c and free() it in check_rest_api.c */
 typedef struct argValues {
   char* hostname;
   char* username;

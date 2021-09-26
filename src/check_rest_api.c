@@ -15,6 +15,7 @@ CURL* curl;
 struct cURLHTTPBody* body;
 struct argValues* argVals;
 // Cleanup
+// All char* values must be instantiated as NULL in read_input.c or a double free will occur
 void end(int exitCode) {
 
   curl_easy_cleanup(curl);
@@ -156,7 +157,7 @@ void* callAPI(void) {
 
   curl = curl_easy_init();
   if (curl) {
-    if (argVals->debug) {
+    if (argVals->debug == 1) {
       curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, my_trace);
       /* the DEBUGFUNCTION has no effect until we enable VERBOSE */
       curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
