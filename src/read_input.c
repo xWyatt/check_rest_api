@@ -21,6 +21,9 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
     This file should only have one line that contains text in the format '<username>:<password>' (Excluding quotes)\n\
   -H, --hostname HOSTNAME\n\
     The hostname, or IP address of the API you want to check\n\
+  -m, --http-method METHOD\n\
+    Optional; the HTTP method for the API call. Only 'GET', 'POST', and 'PUT' are supported at this time.\n\
+    If omitted 'GET' is assumed.\n\
   -K, --key jsonKey\n\
     Optional; a comma delimited list of JSON keys to check. The value of this key must be a number\n\
      If not provided, check_rest_api will check the HTTP status code. Anything < 400 will return OK,\n\
@@ -41,7 +44,20 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
     Disables checking peer's SSL certificate (if using SSL/HTTPS). Not recommended to use\n\
   \nReport Bugs to: teeterwyatt@gmail.com\n";
 
-char version[] = "check_rest_api version: 1.1.0\n";
+char version[] = "check_rest_api version: 1.1.1\n";
+
+// Used to make a string uppercase
+void toUpper(char* str) {
+  int character;
+  character = 0;
+
+  while (str[character]) {
+    str[character] = toupper(str[character]);
+    character++;
+  } 
+
+  return;
+}
 
 // I'm thinking this needs externalized
 // This function is dedicated to parsing out [@]start:end from -w and -c
@@ -275,6 +291,7 @@ int validateArguments(int argc, char** argv) {
   argVals->criticalInclusive = NULL;
   argVals->timeout = 10L;
   argVals->insecureSSL = 0;
+  argVals->httpMethod = 0;
 
   // Require arguments
   if (argc == 1) {
@@ -284,7 +301,14 @@ int validateArguments(int argc, char** argv) {
 
   // Verify all arguments passed
   int i;
+  int lastArgHadNoInput = 0;
   for (i = 1; i < argc; i += 2) {
+
+    // For --insecure and the like that have no nextArg
+    if (lastArgHadNoInput == 1) {
+      i = i-1;
+      lastArgHadNoInput = 0;
+    }
 
     char* arg = (char*) argv[i];
     char* nextArg = (char*) argv[i + 1];
@@ -529,6 +553,28 @@ int validateArguments(int argc, char** argv) {
     if (strcmp(arg, "-k") == 0 || strcmp(arg, "--insecure") == 0) {
       // Set our insecure SSL Flag
       argVals->insecureSSL = 1;
+
+      // We don't use nextArg here
+      lastArgHadNoInput = 1;
+
+      continue;
+    }
+
+    // HTTP Method
+    if (strcmp(arg, "-m") == 0 || strcmp(arg, "--http-method") == 0) {
+      toUpper(nextArg);
+    
+      if (strcmp(nextArg, "GET") == 0) {
+        argVals->httpMethod = 0;
+      } else if (strcmp(nextArg, "POST") == 0) {
+        argVals->httpMethod = 1;
+      } else if (strcmp(nextArg, "PUT") == 0) {
+        argVals->httpMethod = 2;
+      } else { // Invalid value
+        printf("Invalid value for -m/--http-method. This must be 'GET', 'POST', or 'PUT'\n\n%s", helpMessage);
+        return 0;
+      }
+ 
       continue;
     }
 

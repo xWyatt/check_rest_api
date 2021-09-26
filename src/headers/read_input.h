@@ -17,6 +17,7 @@ typedef struct argValues {
   int insecureSSL;
   char* header;
   int debug;
+  int httpMethod;
 } argValues;
 
 struct argValues* argVals;
