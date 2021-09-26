@@ -41,7 +41,7 @@ char helpMessage[] = "Usage: check_rest_api [OPTIONS..]\n\nOptions:\n\
     Disables checking peer's SSL certificate (if using SSL/HTTPS). Not recommended to use\n\
   \nReport Bugs to: teeterwyatt@gmail.com\n";
 
-char version[] = "check_rest_api version: 1.1.0\n";
+char version[] = "check_rest_api version: 1.1.1\n";
 
 // I'm thinking this needs externalized
 // This function is dedicated to parsing out [@]start:end from -w and -c
