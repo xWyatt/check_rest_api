@@ -21,6 +21,7 @@ Usage for a Nagios Command will be nearly identical.
 | `--debug` | `-d` | Enable trace mode to see low level data flow in ASCII and HEXADECIMAL representation. |
 | `--header` | `-D` | A string to be added into HTTP request header. |
 | `--insecure` | `-k` | Disables checking peer's SSL certificate (if using SSL/HTTPS). Not recommended to use |
+| `--http-method` | `-m` | Optional; the HTTP method for the API call. Only 'GET', 'POST', and 'PUT' are supported at this time. If omitted 'GET' is assumed. | 
 
 ### Example Usage
 `Note`: Tildes (~) are escaped here as a normal BaSH will expand that to the users home directory. You needn't escape a tilde when writing a custom Nagios Command. 
