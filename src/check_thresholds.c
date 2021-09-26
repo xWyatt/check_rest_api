@@ -19,6 +19,9 @@ int checkHTTPStatusCode(CURL* curl) {
   if (httpResponseCode == 200) {
     printf("OK - API Returned 200-OK\n");
     return OK;
+  } else if (httpResponseCode == 201) {
+    printf("OK - API Returned 201-Created\n");
+    return OK;
   }
 
   

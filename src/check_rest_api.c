@@ -185,6 +185,14 @@ void* callAPI(void) {
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER,  0);
     }
 
+    // Check if we need to change our method from GET
+    if (argVals->httpMethod == 1) {
+      curl_easy_setopt(curl, CURLOPT_POST, 1L);
+      curl_easy_setopt(curl, CURLOPT_POSTFIELDS, ""); // HTTP server might now allow POST requests without parameters
+    } else if (argVals->httpMethod == 2) {
+      curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+    }
+
     res = curl_easy_perform(curl);
 
     // This is the only place, besides main() that returns
