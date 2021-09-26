@@ -451,8 +451,9 @@ int validateArguments(int argc, char** argv) {
     if (strcmp(arg, "-d") == 0 || strcmp(arg, "--debug") == 0) {
      argVals->debug = 1;
 
-     i--; // Since no second parm, move i back one to get the next arg
-     continue;
+      // We don't use nextArg here
+      lastArgHadNoInput = 1;
+      continue;
 
     }
 
@@ -560,7 +561,6 @@ int validateArguments(int argc, char** argv) {
       // We don't use nextArg here
       lastArgHadNoInput = 1;
 
-      i--; // Since no second parm, move i back one to get the next arg
       continue;
     }
 
