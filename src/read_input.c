@@ -560,6 +560,7 @@ int validateArguments(int argc, char** argv) {
       // We don't use nextArg here
       lastArgHadNoInput = 1;
 
+      i--; // Since no second parm, move i back one to get the next arg
       continue;
     }
 
@@ -578,7 +579,6 @@ int validateArguments(int argc, char** argv) {
         return 0;
       }
       
-      i--; // Since no second parm, move i back one to get the next arg
       continue;
     }
 
