@@ -64,7 +64,8 @@ jobs:
     #    uses a compiled language
 
     - run: |
-       sudo apt-get install libcurl4-openssl-dev libjson-c-dev
+       sudo apt-get install libcurl4-openssl-dev 
+       sudo apt-get install libjson-c-dev
        cd src/
        make
 
