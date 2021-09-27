@@ -63,10 +63,10 @@ jobs:
     #    and modify them (or add more) to build your code if your project
     #    uses a compiled language
 
-    - run: |
+    - name: Install Dependencies & Build
+      run: |
        sudo apt install libjson-c-dev libcurl4-openssl-dev 
        sudo ln -s /usr/include/json-c/ /usr/include/json
-       ls /usr/include
        cd src/
        make
 
