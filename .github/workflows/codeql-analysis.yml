@@ -65,7 +65,8 @@ jobs:
 
     - run: |
        sudo apt install libjson-c-dev libcurl4-openssl-dev 
-       sudo ln -s /usr/include/jsoncpp/json/ /usr/include/json
+       sudo ln -s /usr/include/json-c/ /usr/include/json
+       ls /usr/include
        cd src/
        make
 
