@@ -30,25 +30,30 @@ int checkHTTPStatusCode(CURL* curl) {
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpResponseCode);
 
   if (httpResponseCode == 200) {
-    printf("OK - API Returned 200-OK | status_code=200\n");
+    printf("OK - Status Code = 200 | status_code=200\n");
+    printf("HTTP Status Code 200 - OK\n");
     return OK;
   } else if (httpResponseCode == 201) {
-    printf("OK - API Returned 201-Created | status_code=201\n");
+    printf("OK - Status Code = 201 | status_code=201\n");
+    printf("HTTP Status Code 201 - Created\n");
     return OK;
   }
 
   
   if (httpResponseCode < 500) {
-    printf("WARNING - Unexpected HTTP response code: %ld | status_code=%ld\n", httpResponseCode, httpResponseCode);
+    printf("WARNING - Status Code = %ld | status_code=%ld\n", httpResponseCode, httpResponseCode);
+    printf("Unexpected HTTP response code %ld\n", httpResponseCode);
     return WARNING;
   }
 
   if (httpResponseCode > 500) {
-    printf("CRITICAL - HTTP Reponse Code > 500: %ld | status_code=%ld\n", httpResponseCode, httpResponseCode);
+    printf("CRITICAL - Status Code = %ld | status_code=%ld\n", httpResponseCode, httpResponseCode);
+    printf("Unexpected HTTP reponse code %ld\n", httpResponseCode);
     return CRITICAL;
   }
 
-  printf("UNKNOWN - HTTP Response Code: %ld | status_code=%ld\n", httpResponseCode, httpResponseCode);
+  printf("UNKNOWN - Status Code = %ld | status_code=%ld\n", httpResponseCode, httpResponseCode);
+  printf("Unknown HTTP status code %ld\n", httpResponseCode);
   return UNKNOWN;
 }
 
@@ -264,7 +269,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
         int thisKeyStatus = OK;        
 
         // Form the 'pretty' info string (for the short text description)
-        char tempMessage[] = "'%s' is %g, ";
+        char tempMessage[] = "'%s'=%g, ";
         char* message = malloc(snprintf(NULL, 0, tempMessage, jsonKey, value) + 1);
         sprintf(message, tempMessage, jsonKey, value);
 
