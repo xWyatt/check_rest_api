@@ -369,11 +369,12 @@ int validateArguments(int argc, char** argv) {
         return 0;
       }
 
-      // Verify file exists and we can read it
-      if (access(nextArg, R_OK) != -1) {
-      
-        // Open File
-        FILE *basicAuthFile = (FILE*) fopen(nextArg, "r");
+      // Open File
+      FILE *basicAuthFile = (FILE*) fopen(nextArg, "r");
+      if (basicAuthFile == NULL) {
+        printf("Cannot read from file '%s' to retrieve Basic Auth credentials. Verify the file exists and has read permission.\n\n%s", nextArg, helpMessage);
+        return 0;
+      } else {
 
         // Read line into buffer
         char* buffer = NULL;
@@ -415,9 +416,6 @@ int validateArguments(int argc, char** argv) {
           printf("No data in file '%s'. Verify the file has only one line and contains only '<username>:<password>'\n\n%s", nextArg, helpMessage); 
           return 0;
         }
-      } else {
-        printf("Cannot read from file '%s' to retrieve Basic Auth credentials. Verify the file exists and has read permission.\n\n%s", nextArg, helpMessage);
-        return 0;
       }
     }
 
