@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <curl/curl.h>
 #include <json/json_tokener.h>
@@ -9,6 +10,18 @@
 
 #include "headers/check_rest_api.h"
 #include "headers/read_input.h"
+
+// Modifies the passed string to converts a json key into a 'perf data' string
+// IE make the key lowercase and set spaces to underscores
+void jsonKeyToPerfDataKey(char* key) {
+  int i;
+  for (i = 0; key[i]; i++) {
+    key[i] = tolower(key[i]);
+    if (key[i] == ' ') {
+      key[i] = '_';
+    }
+  }
+}
 
 // Checks HTTP status codes. Program can/will exit from here
 int checkHTTPStatusCode(CURL* curl) {
@@ -192,14 +205,23 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
   char* WARNINGmessages;
   char* CRITICALmessages;
   char* UNKNOWNmessages;
+  char* FirstPerfMessage;
+  char* OtherPerfMessages;
+  char* LONGmessages;
   OKmessages = malloc(1);
   WARNINGmessages = malloc(1);
   CRITICALmessages = malloc(1);
   UNKNOWNmessages = malloc(1);
+  LONGmessages = malloc(1);
+  FirstPerfMessage = malloc(1);
+  OtherPerfMessages = malloc(1);
   OKmessages[0] = '\0';
   WARNINGmessages[0] = '\0';
   CRITICALmessages[0] = '\0';
   UNKNOWNmessages[0] = '\0';
+  LONGmessages[0] = '\0';
+  FirstPerfMessage[0] = '\0';
+  OtherPerfMessages[0] = '\0';
 
   // Check each key for 'validity'
   int i;
@@ -226,6 +248,14 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
 
         UNKNOWNmessages = realloc(UNKNOWNmessages, strlen(UNKNOWNmessages) + strlen(message) + 1);
         strcat(UNKNOWNmessages, message);
+
+        // Set the 'long' text description
+        char longMessageTemp[] = "JSON type of '%s' is '%s'. Needs to be a double or int\n";
+        char* longMessage = malloc(snprintf(NULL, 0, longMessageTemp, jsonKey, json_type_to_name(type)) + 1);
+        sprintf(longMessage, longMessageTemp, jsonKey, json_type_to_name(type));
+        LONGmessages = realloc(LONGmessages, strlen(LONGmessages) + strlen(longMessage) + 1);
+        strcat(LONGmessages,longMessage);
+        
  
         severityLevel = UNKNOWN;
       } else {
@@ -233,7 +263,7 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
         double value = json_object_get_double(object);
         int thisKeyStatus = OK;        
 
-        // Form the 'pretty' info string
+        // Form the 'pretty' info string (for the short text description)
         char tempMessage[] = "'%s' is %g, ";
         char* message = malloc(snprintf(NULL, 0, tempMessage, jsonKey, value) + 1);
         sprintf(message, tempMessage, jsonKey, value);
@@ -302,6 +332,39 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
           OKmessages = realloc(OKmessages, strlen(OKmessages) + strlen(message) + 1);
           strcat(OKmessages, message);
         }
+
+
+        // Set long text description
+        char* textDescription;
+        if (thisKeyStatus == CRITICAL) {
+          char tempTextDescription[] = "'%s' is '%g' (Critical)\n";
+          textDescription = malloc(snprintf(NULL, 0, tempTextDescription, jsonKey, value) + 1);
+          sprintf(textDescription, tempTextDescription, jsonKey, value);
+        } else if (thisKeyStatus == WARNING) {
+          char tempTextDescription[] = "'%s' is '%g' (Warning)\n";
+          textDescription = malloc(snprintf(NULL, 0, tempTextDescription, jsonKey, value) + 1);
+          sprintf(textDescription, tempTextDescription, jsonKey, value);
+        } else {
+          char tempTextDescription[] = "'%s' is '%g' (OK)\n";
+          textDescription = malloc(snprintf(NULL, 0, tempTextDescription, jsonKey, value) + 1);
+          sprintf(textDescription, tempTextDescription, jsonKey, value);
+        }
+        LONGmessages = realloc(LONGmessages, strlen(LONGmessages) + strlen(textDescription) + 1);
+        strcat(LONGmessages, textDescription);
+        
+
+        // Set performance data
+        jsonKeyToPerfDataKey(jsonKey);
+        char tempPerf[] = "%s=%g\n";
+        char* perfData = malloc(snprintf(NULL, 0, tempPerf, jsonKey, value) + 1);
+        sprintf(perfData, tempPerf, jsonKey, value);
+        if (strlen(FirstPerfMessage) == 0) {
+          FirstPerfMessage = realloc(FirstPerfMessage, strlen(perfData) + 1);
+          strcpy(FirstPerfMessage, perfData);
+        } else {
+          OtherPerfMessages = realloc(OtherPerfMessages, strlen(OtherPerfMessages) + strlen(perfData) + 1);
+          strcat(OtherPerfMessages, perfData);
+        }
       }
     } else { // Object not found
 
@@ -309,10 +372,18 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
       char tempMessage[] = "JSON key '%s' not found, ";
       char* message;
       message = malloc(snprintf(NULL, 0, tempMessage, jsonKey) + 1);
-      strcpy(message, tempMessage);
-   
+      sprintf(message, tempMessage, jsonKey);
+
       UNKNOWNmessages = realloc(UNKNOWNmessages, strlen(UNKNOWNmessages) + strlen(message) + 1);
       strcat(UNKNOWNmessages, message);
+
+      // Set long text description
+      char longMessageTemp[] = "JSON key '%s' not found\n";
+      char* longMessage = malloc(snprintf(NULL, 0, longMessageTemp, jsonKey) + 1);
+      sprintf(longMessage, longMessageTemp, jsonKey);
+
+      LONGmessages = realloc(LONGmessages, strlen(LONGmessages) + strlen(longMessage) + 1);
+      strcat(LONGmessages, longMessage);
 
       severityLevel = UNKNOWN;
     }
@@ -368,12 +439,30 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
     printf("%s", OKmessages);
   }
 
-  printf("\n");
+  // Perf data - line 1
+  if (strlen(FirstPerfMessage) > 0) {
+    printf(" | %s", FirstPerfMessage);
+  } else {
+    printf(" | \n");
+  }
+
+  // Long text descriptions
+  if (strlen(OtherPerfMessages) > 0) {
+    printf("%s | ", LONGmessages);
+  } else {
+    printf("%s", LONGmessages);
+  }
+
+  // Other perf data
+  printf("%s", OtherPerfMessages);
 
   free(UNKNOWNmessages);
   free(CRITICALmessages);
   free(WARNINGmessages);
   free(OKmessages);
+  free(FirstPerfMessage);
+  free(LONGmessages);
+  free(OtherPerfMessages);
 
   return severityLevel;
 }
