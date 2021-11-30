@@ -188,31 +188,21 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
   // they output in order? Yeah. There are.
   // TODO: More efficient way of storing and sorting output messages from checkHTTPBody
   int severityLevel = OK;
-  char** OKmessages;
-  char** WARNINGmessages;
-  char** CRITICALmessages;
-  char** UNKNOWNmessages;
-  OKmessages = malloc(numberOfKeys * sizeof(OKmessages));
-  WARNINGmessages = malloc(numberOfKeys * sizeof(WARNINGmessages));
-  CRITICALmessages = malloc(numberOfKeys * sizeof(CRITICALmessages));
-  UNKNOWNmessages = malloc(numberOfKeys * sizeof(UNKNOWNmessages));
-
-  int i;
-
-  // Allocate blank values for our messages  
-  for (i = 0; i < numberOfKeys; i++) { 
-    OKmessages[i] = malloc(1);
-    WARNINGmessages[i] = malloc(1);
-    CRITICALmessages[i] = malloc(1);
-    UNKNOWNmessages[i] = malloc(1);
-
-    OKmessages[i][0] = '\0'; 
-    WARNINGmessages[i][0] = '\0'; 
-    CRITICALmessages[i][0] = '\0'; 
-    UNKNOWNmessages[i][0] = '\0'; 
-  }
+  char* OKmessages;
+  char* WARNINGmessages;
+  char* CRITICALmessages;
+  char* UNKNOWNmessages;
+  OKmessages = malloc(1);
+  WARNINGmessages = malloc(1);
+  CRITICALmessages = malloc(1);
+  UNKNOWNmessages = malloc(1);
+  OKmessages[0] = '\0';
+  WARNINGmessages[0] = '\0';
+  CRITICALmessages[0] = '\0';
+  UNKNOWNmessages[0] = '\0';
 
   // Check each key for 'validity'
+  int i;
   for (i = 0; i < numberOfKeys; i++) {
     // Copy the json key string to print later
     int j;
@@ -229,16 +219,25 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
       // Require type to be a number before checking
       if (type != json_type_int && type != json_type_double) {
 
-        char msg[] = "UNKNOWN - JSON type of '%s' is '%s'. Needs to be a double or int.\n";
-        int len = snprintf(NULL, 0, msg, jsonKey, json_type_to_name(type));
-        UNKNOWNmessages[i] = realloc(UNKNOWNmessages[i], len + 1);
-        sprintf(UNKNOWNmessages[i], msg, jsonKey, json_type_to_name(type));
+        // Form the 'pretty' info string
+        char tempMessage[] = "JSON type of '%s' is '%s'. Needs to be a double or int, ";
+        char* message = malloc(snprintf(NULL, 0, tempMessage, jsonKey, json_type_to_name(type)) + 1);
+        sprintf(message, tempMessage, jsonKey, json_type_to_name(type));
 
+        UNKNOWNmessages = realloc(UNKNOWNmessages, strlen(UNKNOWNmessages) + strlen(message) + 1);
+        strcat(UNKNOWNmessages, message);
+ 
         severityLevel = UNKNOWN;
       } else {
 
         double value = json_object_get_double(object);
-      
+        int thisKeyStatus = OK;        
+
+        // Form the 'pretty' info string
+        char tempMessage[] = "'%s' is %g, ";
+        char* message = malloc(snprintf(NULL, 0, tempMessage, jsonKey, value) + 1);
+        sprintf(message, tempMessage, jsonKey, value);
+
         // Check Critical, if applicable
         if (arguments->criticalMin != NULL) {
         
@@ -250,43 +249,27 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
           if (inclusive) {
 
             if (value <= min || value >= max) {
+ 
+              CRITICALmessages = realloc(CRITICALmessages, strlen(CRITICALmessages) + strlen(message) + 1);
+              strcat(CRITICALmessages, message);
 
-              char msg[] = "CRITICAL - '%s' is %g\n";
-              int len = snprintf(NULL, 0, msg, jsonKey, value);
-              CRITICALmessages[i] = realloc(CRITICALmessages[i], len + 1);
-              sprintf(CRITICALmessages[i], msg, jsonKey, value);
-
-              if (severityLevel < WARNING) severityLevel = CRITICAL;
-            } else {
-
-              char msg[] = "OK - '%s' is %g\n";
-              int len = snprintf(NULL, 0, msg, jsonKey, value);
-              OKmessages[i] = realloc(OKmessages[i], len + 1);      
-              sprintf(OKmessages[i], msg, jsonKey, value);
+              if (severityLevel < CRITICAL) severityLevel = CRITICAL;
+              thisKeyStatus = CRITICAL;
             }
-
           } else {
-
             if (value < min || value > max) {
               
-              char msg[] = "CRITICAL - '%s' is %g\n";
-              int len = snprintf(NULL, 0, msg, jsonKey, value);
-              CRITICALmessages[i] = realloc(CRITICALmessages[i], len + 1);
-              sprintf(CRITICALmessages[i], msg, jsonKey, value);
+              CRITICALmessages = realloc(CRITICALmessages, strlen(CRITICALmessages) + strlen(message) + 1);
+              strcat(CRITICALmessages, message);
 
-              if (severityLevel < WARNING) severityLevel = CRITICAL;
-            } else {           
-
-              char msg[] = "OK - '%s' is %g\n";
-              int len = snprintf(NULL, 0, msg, jsonKey, value);
-              OKmessages[i] = realloc(OKmessages[i], len + 1);      
-              sprintf(OKmessages[i], msg, jsonKey, value);
+              if (severityLevel < CRITICAL) severityLevel = CRITICAL;
+              thisKeyStatus = CRITICAL;
             }
           }
         }
 
         // Check Warning, if applicable (We set WARNING, and CRITICAL isn't set)
-        if (arguments->warningMin != NULL && strlen(CRITICALmessages[i]) == 0) {
+        if (arguments->warningMin != NULL && thisKeyStatus != CRITICAL) {
         
           int min, max, inclusive;
           min = arguments->warningMin[i];
@@ -294,82 +277,98 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
           inclusive = arguments->warningInclusive[i];
         
           if (inclusive) {
-
             if (value <= min || value >= max) {
 
-              char msg[] = "WARNING - '%s' is %g\n";
-              int len = snprintf(NULL, 0, msg, jsonKey, value);
-              WARNINGmessages[i] = realloc(WARNINGmessages[i], len + 1);
-              sprintf(WARNINGmessages[i], msg, jsonKey, value);
-
-              // Wipe out OK message from critical
-              OKmessages[i][0] = '\0';
+              WARNINGmessages = realloc(WARNINGmessages, strlen(WARNINGmessages) + strlen(message) + 1);
+              strcat(WARNINGmessages, message);
 
               if (severityLevel < WARNING) severityLevel = WARNING;
-            } else {
-
-              // Only write if we haven't already written OK
-              if (strlen(OKmessages[i]) == 0) {
-                char msg[] = "OK - '%s' is %g\n";
-                int len = snprintf(NULL, 0, msg, jsonKey, value);
-                OKmessages[i] = realloc(OKmessages[i], len + 1);
-                sprintf(OKmessages[i], msg, jsonKey, value);
-              }
+              thisKeyStatus = WARNING;
             }
-
           } else {
-
             if (value < min || value > max) {
       
-              char msg[] = "WARNING - '%s' is %g\n";
-              int len = snprintf(NULL, 0, msg, jsonKey, value);
-              WARNINGmessages[i] = realloc(WARNINGmessages[i], len + 1);
-              sprintf(WARNINGmessages[i], msg, jsonKey, value);
-
-              // Wipe out OK message from critical
-              OKmessages[i][0] = '\0';
+              WARNINGmessages = realloc(WARNINGmessages, strlen(WARNINGmessages) + strlen(message) + 1);
+              strcat(WARNINGmessages, message);
 
               if (severityLevel < WARNING) severityLevel = WARNING;
-            } else {
-
-              // Only write if we haven't already written OK
-              if (strlen(OKmessages[i]) == 0) {
-                char msg[] = "OK - '%s' is %g\n";
-                int len = snprintf(NULL, 0, msg, jsonKey, value);
-                OKmessages[i] = realloc(OKmessages[i], len + 1);
-                sprintf(OKmessages[i], msg, jsonKey, value);
-              }
+              thisKeyStatus = WARNING;
             }
           }
         }
+
+        // Set OK string if we never set WARNING nor CRITICAL
+        if (thisKeyStatus == OK) {
+          OKmessages = realloc(OKmessages, strlen(OKmessages) + strlen(message) + 1);
+          strcat(OKmessages, message);
+        }
       }
     } else { // Object not found
-      char msg[] = "UNKNOWN - JSON key '%s' not found!\n";
-      int len = snprintf(NULL, 0, msg, jsonKey);
-      UNKNOWNmessages[i] = realloc(UNKNOWNmessages[i], len + 1);
-      sprintf(UNKNOWNmessages[i], msg, jsonKey);
+
+      // Form the 'pretty' info string
+      char tempMessage[] = "JSON key '%s' not found, ";
+      char* message;
+      message = malloc(snprintf(NULL, 0, tempMessage, jsonKey) + 1);
+      strcpy(message, tempMessage);
+   
+      UNKNOWNmessages = realloc(UNKNOWNmessages, strlen(UNKNOWNmessages) + strlen(message) + 1);
+      strcat(UNKNOWNmessages, message);
+
       severityLevel = UNKNOWN;
     }
   }
 
-  // Print everything in order of UNKNOWN, then CRITICAL, WARNING, and finally OK
-  for (i = 0; i < numberOfKeys; i++) {
-    printf("%s", UNKNOWNmessages[i]);
-  }
-  for (i = 0; i < numberOfKeys; i++) {
-    printf("%s", CRITICALmessages[i]);
-  }
-  for (i = 0; i < numberOfKeys; i++) {
-    printf("%s", WARNINGmessages[i]); 
-  }
-  for (i = 0; i < numberOfKeys; i++) {
-    printf("%s", OKmessages[i]);
+  // Print the overriding status
+  switch(severityLevel) {
+    case OK:
+      printf("OK - ");
+      break;
+    
+    case WARNING:
+      printf("WARNING - ");
+      break;
 
-    free(UNKNOWNmessages[i]);
-    free(CRITICALmessages[i]);
-    free(WARNINGmessages[i]);
-    free(OKmessages[i]);
+    case CRITICAL:
+      printf("CRITICAL - ");
+      break;
+
+    case UNKNOWN:
+    default:
+      printf("UNKNOWN - ");
   }
+
+  // Print everything in order of UNKNOWN, then CRITICAL, WARNING, and finally OK
+  
+  // UNKNOWN
+  if (strlen(UNKNOWNmessages) > 2 && strlen(CRITICALmessages) == 0 && strlen(WARNINGmessages) == 0 && strlen(OKmessages) == 0) {
+    // Print the substring minus 2 (to get rid of ", ")
+    printf("%.*s", (int) strlen(UNKNOWNmessages) - 2, UNKNOWNmessages);
+  } else {
+    printf("%s", UNKNOWNmessages);
+  }
+
+  // CRITICAL
+  if (strlen(CRITICALmessages) > 2 && strlen(WARNINGmessages) == 0 && strlen(OKmessages) == 0) {
+    printf("%.*s", (int) strlen(CRITICALmessages) - 2, CRITICALmessages);
+  } else {
+    printf("%s", CRITICALmessages);
+  }
+
+  // WARNING
+  if (strlen(WARNINGmessages) > 2 && strlen(OKmessages) == 0) {
+    printf("%.*s", (int) strlen(WARNINGmessages) - 2, WARNINGmessages);
+  } else {
+    printf("%s", WARNINGmessages);
+  }
+  
+  // OK
+  if (strlen(OKmessages) > 2) {
+    printf("%.*s", (int) strlen(OKmessages) - 2, OKmessages);
+  } else {
+    printf("%s", OKmessages);
+  }
+
+  printf("\n");
 
   free(UNKNOWNmessages);
   free(CRITICALmessages);
