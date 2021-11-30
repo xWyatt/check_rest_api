@@ -17,25 +17,25 @@ int checkHTTPStatusCode(CURL* curl) {
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpResponseCode);
 
   if (httpResponseCode == 200) {
-    printf("OK - API Returned 200-OK\n");
+    printf("OK - API Returned 200-OK | status_code=200\n");
     return OK;
   } else if (httpResponseCode == 201) {
-    printf("OK - API Returned 201-Created\n");
+    printf("OK - API Returned 201-Created | status_code=201\n");
     return OK;
   }
 
   
   if (httpResponseCode < 500) {
-    printf("WARNING - Unexpected HTTP response code: %ld\n", httpResponseCode);
+    printf("WARNING - Unexpected HTTP response code: %ld | status_code=%ld\n", httpResponseCode, httpResponseCode);
     return WARNING;
   }
 
   if (httpResponseCode > 500) {
-    printf("CRITICAL - HTTP Reponse Code > 500: %ld\n", httpResponseCode);
+    printf("CRITICAL - HTTP Reponse Code > 500: %ld | status_code=%ld\n", httpResponseCode, httpResponseCode);
     return CRITICAL;
   }
 
-  printf("UNKNOWN - HTTP Response Code: %ld\n", httpResponseCode);
+  printf("UNKNOWN - HTTP Response Code: %ld | status_code=%ld\n", httpResponseCode, httpResponseCode);
   return UNKNOWN;
 }
 
