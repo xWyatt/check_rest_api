@@ -56,3 +56,4 @@ dkms.conf
 
 # Compiled program
 src/check_rest_api
+src/check_rest_api_*
