@@ -276,7 +276,8 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
         // Check Critical, if applicable
         if (arguments->criticalMin != NULL) {
         
-          int min, max, inclusive;
+          double min, max;
+          int inclusive;
           min = arguments->criticalMin[i];
           max = arguments->criticalMax[i];
           inclusive = arguments->criticalInclusive[i];
@@ -306,7 +307,8 @@ int checkHTTPBody(json_object* json, argValues* arguments) {
         // Check Warning, if applicable (We set WARNING, and CRITICAL isn't set)
         if (arguments->warningMin != NULL && thisKeyStatus != CRITICAL) {
         
-          int min, max, inclusive;
+          double min, max;
+          int inclusive;
           min = arguments->warningMin[i];
           max = arguments->warningMax[i];
           inclusive = arguments->warningInclusive[i];
